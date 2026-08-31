@@ -88,14 +88,11 @@ export default function SchoolsList() {
     schoolsApi
       .list()
       .then(({ data }) => {
-        // Use database schools if they exist.
-        // Otherwise keep the five sample schools.
         if (data?.data?.length > 0) {
           setSchools(data.data);
         }
       })
       .catch(() => {
-        // Keep sample schools if API is unavailable.
         setSchools(sampleSchools);
       })
       .finally(() => {
@@ -103,35 +100,26 @@ export default function SchoolsList() {
       });
   }, []);
 
-  /*
-   * Get unique regions
-   */
   const regions = useMemo(() => {
     return [
       ...new Set(
         schools
           .map((school) => school.region?.name)
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
   }, [schools]);
 
-  /*
-   * Get unique academic levels
-   */
   const academicLevels = useMemo(() => {
     return [
       ...new Set(
         schools
           .map((school) => school.academicLevel)
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
   }, [schools]);
 
-  /*
-   * Search + filters
-   */
   const filteredSchools = useMemo(() => {
     return schools.filter((school) => {
       const searchText = search.toLowerCase().trim();
@@ -167,40 +155,89 @@ export default function SchoolsList() {
     selectedLevel,
   ]);
 
-  /*
-   * Clear all filters
-   */
   const clearFilters = () => {
     setSearch('');
     setSelectedRegion('');
     setSelectedLevel('');
   };
 
+  const totalStudents = useMemo(() => {
+    return schools.reduce(
+      (total, school) =>
+        total + Number(school.students || 0),
+      0,
+    );
+  }, [schools]);
+
+  const totalTeachers = useMemo(() => {
+    return schools.reduce(
+      (total, school) =>
+        total + Number(school.teachers || 0),
+      0,
+    );
+  }, [schools]);
+
+  const verifiedSchools = useMemo(() => {
+    return schools.filter(
+      (school) => school.isVerified,
+    ).length;
+  }, [schools]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
 
-      {/* =====================================================
-          HEADER / BLUE HERO SECTION
-      ===================================================== */}
+      {/* ================================================
+          HERO SECTION
+      ================================================= */}
 
-      <section className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-700 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* SUBTLE BACKGROUND EFFECTS */}
 
-          {/* CENTERED BLUE BACKGROUND CONTENT */}
-          <div className="flex flex-col items-center text-center">
+        <div className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-indigo-500/10 blur-3xl" />
 
-            <p className="text-blue-200 text-sm font-semibold uppercase tracking-wider">
-              ELMKUSOMA
-            </p>
+        <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
 
-            <h1 className="text-3xl md:text-4xl font-bold mt-2">
-              Find a School
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+
+          <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+
+            {/* SMALL LABEL */}
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+
+              <span className="h-2 w-2 rounded-full bg-sky-400" />
+
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+                ELMKUSOMA Schools
+              </span>
+
+            </div>
+
+
+            {/* TITLE */}
+
+            <h1 className="mt-6 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+
+              Find the right
+
+              <span className="block text-sky-300">
+                school for you.
+              </span>
+
             </h1>
 
-            <p className="text-blue-100 mt-3 max-w-2xl">
-              Explore schools, discover educational opportunities,
-              and find detailed information about each school.
+
+            {/* DESCRIPTION */}
+
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+
+              Explore schools, discover educational opportunities and
+              find useful information to help you make the right
+              educational choice.
+
             </p>
 
           </div>
@@ -210,33 +247,60 @@ export default function SchoolsList() {
       </section>
 
 
-      {/* =====================================================
+      {/* ================================================
           MAIN CONTENT
-      ===================================================== */}
+      ================================================= */}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
 
 
-        {/* ===================================================
-            SEARCH AND FILTERS
-        =================================================== */}
+        {/* ================================================
+            SEARCH PANEL
+        ================================================= */}
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8">
+        <div className="-mt-8 relative z-20 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/10 sm:p-7">
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+
+              <h2 className="text-lg font-bold text-slate-900">
+                Search and explore schools
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Use the filters below to find schools that match
+                what you are looking for.
+              </p>
+
+            </div>
+
+
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+
+              <span className="h-2 w-2 rounded-full bg-sky-500" />
+
+              {schools.length} Available
+
+            </div>
+
+          </div>
+
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
 
 
             {/* SEARCH */}
 
             <div className="md:col-span-6">
 
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Search schools
               </label>
 
               <div className="relative">
 
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
                   🔍
                 </span>
 
@@ -244,8 +308,26 @@ export default function SchoolsList() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by school name, region or district..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="School name, region or district..."
+                  className="
+                    w-full
+                    rounded-xl
+                    border
+                    border-slate-200
+                    bg-slate-50
+                    py-3.5
+                    pl-12
+                    pr-4
+                    text-sm
+                    text-slate-900
+                    outline-none
+                    transition
+                    placeholder:text-slate-400
+                    focus:border-sky-500
+                    focus:bg-white
+                    focus:ring-4
+                    focus:ring-sky-500/10
+                  "
                 />
 
               </div>
@@ -257,14 +339,33 @@ export default function SchoolsList() {
 
             <div className="md:col-span-3">
 
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Region
               </label>
 
               <select
                 value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="w-full px-3 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) =>
+                  setSelectedRegion(e.target.value)
+                }
+                className="
+                  w-full
+                  cursor-pointer
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  px-4
+                  py-3.5
+                  text-sm
+                  text-slate-700
+                  outline-none
+                  transition
+                  focus:border-sky-500
+                  focus:bg-white
+                  focus:ring-4
+                  focus:ring-sky-500/10
+                "
               >
 
                 <option value="">
@@ -272,9 +373,14 @@ export default function SchoolsList() {
                 </option>
 
                 {regions.map((region) => (
-                  <option key={region} value={region}>
+
+                  <option
+                    key={region}
+                    value={region}
+                  >
                     {region}
                   </option>
+
                 ))}
 
               </select>
@@ -286,24 +392,48 @@ export default function SchoolsList() {
 
             <div className="md:col-span-3">
 
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Academic Level
               </label>
 
               <select
                 value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-                className="w-full px-3 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) =>
+                  setSelectedLevel(e.target.value)
+                }
+                className="
+                  w-full
+                  cursor-pointer
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  px-4
+                  py-3.5
+                  text-sm
+                  text-slate-700
+                  outline-none
+                  transition
+                  focus:border-sky-500
+                  focus:bg-white
+                  focus:ring-4
+                  focus:ring-sky-500/10
+                "
               >
 
                 <option value="">
-                  All Academic Levels
+                  All Levels
                 </option>
 
                 {academicLevels.map((level) => (
-                  <option key={level} value={level}>
+
+                  <option
+                    key={level}
+                    value={level}
+                  >
                     {level}
                   </option>
+
                 ))}
 
               </select>
@@ -313,21 +443,21 @@ export default function SchoolsList() {
           </div>
 
 
-          {/* FILTER INFORMATION */}
+          {/* FILTER STATUS */}
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-5 pt-4 border-t border-gray-100">
+          <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
 
               Showing{' '}
 
-              <span className="font-bold text-gray-900">
+              <span className="font-bold text-slate-900">
                 {filteredSchools.length}
               </span>{' '}
 
               of{' '}
 
-              <span className="font-bold text-gray-900">
+              <span className="font-bold text-slate-900">
                 {schools.length}
               </span>{' '}
 
@@ -336,13 +466,29 @@ export default function SchoolsList() {
             </p>
 
 
-            {(search || selectedRegion || selectedLevel) && (
+            {(search ||
+              selectedRegion ||
+              selectedLevel) && (
 
               <button
                 onClick={clearFilters}
-                className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+                className="
+                  inline-flex
+                  w-fit
+                  items-center
+                  gap-2
+                  text-sm
+                  font-semibold
+                  text-sky-700
+                  transition
+                  hover:text-slate-950
+                "
               >
+
+                <span>↺</span>
+
                 Clear all filters
+
               </button>
 
             )}
@@ -352,30 +498,173 @@ export default function SchoolsList() {
         </div>
 
 
-        {/* ===================================================
+        {/* ================================================
+            STATISTICS
+        ================================================= */}
+
+        <section className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+
+
+          {/* SCHOOLS */}
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-lg">
+                🏫
+              </div>
+
+              <div>
+
+                <p className="text-xs font-medium text-slate-500">
+                  Schools
+                </p>
+
+                <p className="text-xl font-black text-slate-900">
+                  {schools.length}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* STUDENTS */}
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-lg">
+                👨‍🎓
+              </div>
+
+              <div>
+
+                <p className="text-xs font-medium text-slate-500">
+                  Students
+                </p>
+
+                <p className="text-xl font-black text-slate-900">
+                  {totalStudents.toLocaleString()}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* TEACHERS */}
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-lg">
+                👩‍🏫
+              </div>
+
+              <div>
+
+                <p className="text-xs font-medium text-slate-500">
+                  Teachers
+                </p>
+
+                <p className="text-xl font-black text-slate-900">
+                  {totalTeachers.toLocaleString()}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* VERIFIED */}
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-lg">
+                ✓
+              </div>
+
+              <div>
+
+                <p className="text-xs font-medium text-slate-500">
+                  Verified
+                </p>
+
+                <p className="text-xl font-black text-slate-900">
+                  {verifiedSchools}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* ================================================
+            SCHOOLS HEADER
+        ================================================= */}
+
+        <div className="mt-14 mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+
+          <div>
+
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-600">
+              Explore Schools
+            </p>
+
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+              Discover educational opportunities.
+            </h2>
+
+          </div>
+
+
+          <p className="text-sm text-slate-500">
+            Browse available schools and learn more about them.
+          </p>
+
+        </div>
+
+
+        {/* ================================================
             LOADING
-        =================================================== */}
+        ================================================= */}
 
         {loading ? (
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 
-            {[1, 2, 3, 4, 5].map((item) => (
+            {[1, 2, 3, 4, 5, 6].map((item) => (
 
               <div
                 key={item}
-                className="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse"
+                className="rounded-3xl border border-slate-200 bg-white p-6 animate-pulse"
               >
 
-                <div className="w-14 h-14 bg-gray-200 rounded-xl"></div>
+                <div className="h-14 w-14 rounded-2xl bg-slate-200" />
 
-                <div className="h-5 bg-gray-200 rounded mt-5 w-3/4"></div>
+                <div className="mt-5 h-6 w-3/4 rounded bg-slate-200" />
 
-                <div className="h-4 bg-gray-200 rounded mt-3 w-1/2"></div>
+                <div className="mt-3 h-4 w-1/2 rounded bg-slate-200" />
 
-                <div className="h-16 bg-gray-200 rounded mt-5"></div>
+                <div className="mt-5 h-16 rounded bg-slate-200" />
 
-                <div className="h-10 bg-gray-200 rounded mt-5"></div>
+                <div className="mt-5 h-20 rounded bg-slate-200" />
 
               </div>
 
@@ -385,31 +674,67 @@ export default function SchoolsList() {
 
         ) : filteredSchools.length > 0 ? (
 
-          /* =================================================
-             SCHOOL CARDS
+          /* ================================================
+              SCHOOL CARDS
           ================================================= */
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 
             {filteredSchools.map((school) => (
 
               <Link
                 key={school.id}
                 to={`/schools/${school.slug}`}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                className="
+                  group
+                  flex
+                  flex-col
+                  overflow-hidden
+                  rounded-3xl
+                  border
+                  border-slate-200
+                  bg-white
+                  shadow-sm
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:border-slate-300
+                  hover:shadow-xl
+                  hover:shadow-slate-900/10
+                "
               >
+
 
                 {/* CARD BODY */}
 
-                <div className="p-6">
+                <div className="flex flex-1 flex-col p-6">
+
 
                   {/* TOP */}
 
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-4">
 
-                    {/* SCHOOL ICON */}
 
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center text-xl font-bold group-hover:bg-blue-700 group-hover:text-white transition-colors">
+                    {/* SCHOOL INITIAL */}
+
+                    <div className="
+                      flex
+                      h-14
+                      w-14
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-2xl
+                      bg-slate-900
+                      text-xl
+                      font-black
+                      text-white
+                      shadow-lg
+                      shadow-slate-900/15
+                      transition-all
+                      duration-300
+                      group-hover:bg-sky-600
+                    ">
 
                       {school.name?.charAt(0)}
 
@@ -420,9 +745,36 @@ export default function SchoolsList() {
 
                     {school.isVerified && (
 
-                      <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                      <span className="
+                        inline-flex
+                        items-center
+                        gap-1.5
+                        rounded-full
+                        border
+                        border-emerald-100
+                        bg-emerald-50
+                        px-3
+                        py-1.5
+                        text-xs
+                        font-semibold
+                        text-emerald-700
+                      ">
 
-                        ✓ Verified
+                        <span className="
+                          flex
+                          h-4
+                          w-4
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-emerald-500
+                          text-[10px]
+                          text-white
+                        ">
+                          ✓
+                        </span>
+
+                        Verified
 
                       </span>
 
@@ -433,7 +785,7 @@ export default function SchoolsList() {
 
                   {/* SCHOOL NAME */}
 
-                  <h2 className="text-xl font-bold text-gray-900 mt-5 group-hover:text-blue-700 transition-colors">
+                  <h2 className="mt-5 text-xl font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-700">
 
                     {school.name}
 
@@ -442,17 +794,22 @@ export default function SchoolsList() {
 
                   {/* LOCATION */}
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
 
-                    <span>📍</span>
-
-                    <span>
-                      {school.region?.name || 'Region unavailable'}
+                    <span className="text-base">
+                      📍
                     </span>
 
-                    {school.district && (
+                    <span>
+                      {school.region?.name ||
+                        'Region unavailable'}
+                    </span>
+
+                    {school.district?.name && (
                       <>
-                        <span>•</span>
+                        <span className="text-slate-300">
+                          •
+                        </span>
 
                         <span>
                           {school.district.name}
@@ -465,7 +822,7 @@ export default function SchoolsList() {
 
                   {/* DESCRIPTION */}
 
-                  <p className="text-sm text-gray-500 leading-6 mt-4 line-clamp-2">
+                  <p className="mt-4 min-h-[72px] text-sm leading-6 text-slate-500 line-clamp-3">
 
                     {school.description ||
                       'Quality education and learning opportunities for students.'}
@@ -475,37 +832,71 @@ export default function SchoolsList() {
 
                   {/* TAGS */}
 
-                  <div className="flex flex-wrap gap-2 mt-4">
+                  <div className="mt-5 flex flex-wrap gap-2">
 
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-xs font-medium">
+                    <span className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-sky-50
+                      px-3
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-sky-700
+                    ">
 
-                      🎓 {school.academicLevel || 'Primary'}
+                      <span>🎓</span>
+
+                      {school.academicLevel ||
+                        'Primary'}
 
                     </span>
 
-                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-medium">
 
-                      🏫 {school.schoolType || 'Government'}
+                    <span className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-slate-100
+                      px-3
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-slate-600
+                    ">
+
+                      <span>🏫</span>
+
+                      {school.schoolType ||
+                        'Government'}
 
                     </span>
 
                   </div>
 
 
-                  {/* STATISTICS */}
+                  {/* STATS */}
 
-                  <div className="grid grid-cols-2 gap-3 mt-5">
+                  <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5">
 
-                    <div className="bg-gray-50 rounded-xl p-3">
 
-                      <p className="text-xs text-gray-500">
+                    {/* STUDENTS */}
+
+                    <div className="rounded-2xl bg-slate-50 p-4 transition group-hover:bg-sky-50">
+
+                      <p className="text-xs font-medium text-slate-500">
                         Students
                       </p>
 
-                      <p className="text-lg font-bold text-gray-900 mt-1">
+                      <p className="mt-1 text-xl font-black text-slate-900">
 
                         {school.students
-                          ? school.students.toLocaleString()
+                          ? Number(
+                              school.students,
+                            ).toLocaleString()
                           : '—'}
 
                       </p>
@@ -513,15 +904,21 @@ export default function SchoolsList() {
                     </div>
 
 
-                    <div className="bg-gray-50 rounded-xl p-3">
+                    {/* TEACHERS */}
 
-                      <p className="text-xs text-gray-500">
+                    <div className="rounded-2xl bg-slate-50 p-4 transition group-hover:bg-slate-100">
+
+                      <p className="text-xs font-medium text-slate-500">
                         Teachers
                       </p>
 
-                      <p className="text-lg font-bold text-gray-900 mt-1">
+                      <p className="mt-1 text-xl font-black text-slate-900">
 
-                        {school.teachers || '—'}
+                        {school.teachers
+                          ? Number(
+                              school.teachers,
+                            ).toLocaleString()
+                          : '—'}
 
                       </p>
 
@@ -534,14 +931,46 @@ export default function SchoolsList() {
 
                 {/* CARD FOOTER */}
 
-                <div className="border-t border-gray-100 px-6 py-4 flex items-center justify-between">
+                <div className="
+                  flex
+                  items-center
+                  justify-between
+                  border-t
+                  border-slate-100
+                  bg-slate-50
+                  px-6
+                  py-4
+                  transition-colors
+                  group-hover:bg-slate-100
+                ">
 
-                  <span className="text-sm font-semibold text-blue-700">
+                  <span className="text-sm font-bold text-slate-800 group-hover:text-sky-700">
+
                     View School Details
+
                   </span>
 
-                  <span className="text-lg text-blue-700 group-hover:translate-x-1 transition-transform">
+
+                  <span className="
+                    flex
+                    h-9
+                    w-9
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-white
+                    text-lg
+                    text-slate-700
+                    shadow-sm
+                    transition-all
+                    duration-300
+                    group-hover:translate-x-1
+                    group-hover:bg-slate-900
+                    group-hover:text-white
+                  ">
+
                     →
+
                   </span>
 
                 </div>
@@ -554,27 +983,44 @@ export default function SchoolsList() {
 
         ) : (
 
-          /* =================================================
-             NO RESULTS
+          /* ================================================
+              NO RESULTS
           ================================================= */
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-16 px-6">
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center shadow-sm">
 
-            <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center text-2xl">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-3xl">
               🔍
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 mt-5">
+            <h2 className="mt-6 text-2xl font-bold text-slate-900">
               No schools found
             </h2>
 
-            <p className="text-gray-500 mt-2">
-              Try searching for another school or change your filters.
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
+
+              We could not find any schools matching your search
+              and selected filters.
+
             </p>
 
             <button
               onClick={clearFilters}
-              className="mt-5 bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl font-semibold transition"
+              className="
+                mt-6
+                rounded-xl
+                bg-slate-900
+                px-6
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-lg
+                shadow-slate-900/20
+                transition
+                hover:-translate-y-0.5
+                hover:bg-slate-800
+              "
             >
               Clear Filters
             </button>
