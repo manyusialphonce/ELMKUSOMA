@@ -5,6 +5,7 @@ import {
 } from 'react-router-dom';
 
 import PublicLayout from '../layouts/PublicLayout';
+import AuthLayout from '../layouts/AuthLayout';
 import StudentLayout from '../layouts/StudentLayout';
 import TeacherLayout from '../layouts/TeacherLayout';
 import AdminLayout from '../layouts/AdminLayout';
@@ -190,16 +191,7 @@ const router = createBrowserRouter([
         element: s(<Home />),
       },
 
-      {
-        path: '/login',
-        element: s(<Login />),
-      },
-
-      {
-        path: '/register',
-        element: s(<Register />),
-      },
-
+      
       {
         path: '/notes-library',
         element: s(<NotesLibrary />),
@@ -233,6 +225,27 @@ const router = createBrowserRouter([
     ],
   },
 
+// ==================================
+// AUTH AREA
+// ==================================
+
+{
+  element: <AuthLayout />,
+
+  children: [
+
+    {
+      path: '/login',
+      element: s(<Login />),
+    },
+
+    {
+      path: '/register',
+      element: s(<Register />),
+    },
+
+  ],
+},
 
   // ==================================
   // STUDENT AREA
