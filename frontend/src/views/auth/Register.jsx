@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom';
 
 import useAuthStore from '../../stores/authStore';
+import registerBg from '../../assets/register-bg.jpg';
 import TextField from '../../components/common/TextField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
@@ -423,23 +424,26 @@ export default function Register() {
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-blue-100 to-slate-200">
-      <div className="mx-auto my-12 w-full max-w-md px-4">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${registerBg})`,
+      }}
+    >
 
 
 
-
-        {/* ==================================
+      {/* ==================================
           REGISTER CARD
       =================================== */}
-
+      <div className="mx-auto w-full max-w-2xl px-4 py-12">
 
         <div
           className="
           rounded-2xl
           border
           border-slate-200
-          bg-white
+          bg-white/93
           p-6
           shadow-lg
           sm:p-8
@@ -893,8 +897,8 @@ export default function Register() {
 
 
       </div>
-    </div>
 
+    </div>
   );
 
 }
