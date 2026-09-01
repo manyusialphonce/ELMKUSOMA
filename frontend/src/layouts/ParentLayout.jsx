@@ -3,6 +3,7 @@ import useAuthStore from '../stores/authStore';
 
 const NAV_ITEMS = [
   { to: '/parent', label: 'My Children', end: true },
+  { to: '/parent/notes-library', label: 'Notes Library' },
   { to: '/parent/notifications', label: 'Notifications' },
   { to: '/parent/profile', label: 'Profile' },
 ];

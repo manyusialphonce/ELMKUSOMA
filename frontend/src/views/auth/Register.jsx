@@ -7,9 +7,15 @@ import {
 } from 'react-router-dom';
 
 import useAuthStore from '../../stores/authStore';
+import registerBg from '../../assets/register-bg.jpg';
 import TextField from '../../components/common/TextField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
+import {
+  TANZANIA_REGIONS,
+  getDistrictsByRegion,
+} from '../../data/tanzaniaLocations';
+
 
 
 // ======================================
@@ -144,9 +150,9 @@ export default function Register() {
 
   const initialRole =
     requestedRole &&
-    ROLE_VALUES.includes(
-      requestedRole.toLowerCase()
-    )
+      ROLE_VALUES.includes(
+        requestedRole.toLowerCase()
+      )
       ? requestedRole.toLowerCase()
       : 'student';
 
@@ -159,6 +165,10 @@ export default function Register() {
     fullName: '',
     email: '',
     phoneNumber: '',
+    dateOfBirth: '',
+    country: '',
+    region: '',
+    district: '',
     password: '',
     passwordConfirmation: '',
     role: initialRole,
@@ -178,18 +188,33 @@ export default function Register() {
   // ======================================
 
   const handleChange = (event) => {
+    const { name, value } = event.target;
 
-    const {
-      name,
-      value,
-    } = event.target;
+    setForm((previous) => {
+      // When country changes, clear region and district
+      if (name === 'country') {
+        return {
+          ...previous,
+          country: value,
+          region: '',
+          district: '',
+        };
+      }
 
+      // When region changes, clear district
+      if (name === 'region') {
+        return {
+          ...previous,
+          region: value,
+          district: '',
+        };
+      }
 
-    setForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-
+      return {
+        ...previous,
+        [name]: value,
+      };
+    });
   };
 
 
@@ -203,6 +228,69 @@ export default function Register() {
 
     setError('');
 
+    // ======================================
+    // DATE OF BIRTH VALIDATION
+    // ======================================
+
+    if (!form.dateOfBirth) {
+      setError('Date of Birth is required.');
+      return;
+    }
+
+    const dateOfBirth = new Date(form.dateOfBirth);
+    const today = new Date();
+
+    if (Number.isNaN(dateOfBirth.getTime())) {
+      setError('Please enter a valid Date of Birth.');
+      return;
+    }
+
+    if (dateOfBirth > today) {
+      setError('Date of Birth cannot be in the future.');
+      return;
+    }
+
+
+    // ======================================
+    // LOCATION VALIDATION
+    // ======================================
+
+    if (
+      form.role === 'teacher' ||
+      form.role === 'parent'
+    ) {
+      // Country is required
+      if (!form.country.trim()) {
+        setError('Country is required.');
+        return;
+      }
+
+      // Tanzania uses dropdowns
+      if (form.country === 'Tanzania') {
+        if (!form.region) {
+          setError('Please select a region.');
+          return;
+        }
+
+        if (!form.district) {
+          setError('Please select a district.');
+          return;
+        }
+      }
+
+      // Other countries use text fields
+      else {
+        if (!form.region.trim()) {
+          setError('Region is required.');
+          return;
+        }
+
+        if (!form.district.trim()) {
+          setError('District is required.');
+          return;
+        }
+      }
+    }
 
     // ======================================
     // PASSWORD VALIDATION
@@ -248,14 +336,28 @@ export default function Register() {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         role: form.role.toLowerCase(),
+        dateOfBirth: form.dateOfBirth,
       };
 
-
-      // Only add phone number if provided
+      // Phone number
       if (form.phoneNumber.trim()) {
-        payload.phoneNumber =
-          form.phoneNumber.trim();
+        payload.phoneNumber = form.phoneNumber.trim();
       }
+      console.log('REGISTRATION PAYLOAD:', payload);
+
+
+      // Location information
+      // Only Teacher and Parent should send location data.
+      if (
+        form.role === 'teacher' ||
+        form.role === 'parent'
+      ) {
+        payload.country = form.country.trim();
+        payload.region = form.region.trim();
+        payload.district = form.district.trim();
+      }
+
+      console.log('REGISTRATION PAYLOAD:', payload);
 
 
       // ======================================
@@ -293,15 +395,15 @@ export default function Register() {
       const message =
         err.response?.data?.errors
           ? err.response.data.errors
-              .map(
-                (item) =>
-                  item.msg ||
-                  item.message ||
-                  String(item)
-              )
-              .join(' ')
+            .map(
+              (item) =>
+                item.msg ||
+                item.message ||
+                String(item)
+            )
+            .join(' ')
           : err.response?.data?.message ||
-            'Registration failed. Please try again.';
+          'Registration failed. Please try again.';
 
 
       setError(message);
@@ -322,37 +424,44 @@ export default function Register() {
 
   return (
 
-    <div className="mx-auto my-12 w-full max-w-md px-4">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${registerBg})`,
+      }}
+    >
+
 
 
       {/* ==================================
           REGISTER CARD
       =================================== */}
+      <div className="mx-auto w-full max-w-2xl px-4 py-12">
 
-      <div
-        className="
+        <div
+          className="
           rounded-2xl
           border
           border-slate-200
-          bg-white
+          bg-white/93
           p-6
           shadow-lg
           sm:p-8
         "
-      >
+        >
 
 
-        {/* ================================
+          {/* ================================
             HEADER
         ================================= */}
 
-        <div className="mb-8 text-center">
+          <div className="mb-8 text-center">
 
 
-          {/* LOGO PLACEHOLDER */}
+            {/* LOGO PLACEHOLDER */}
 
-          <div
-            className="
+            <div
+              className="
               mx-auto
               mb-4
               flex
@@ -367,73 +476,73 @@ export default function Register() {
               text-white
               shadow-md
             "
-          >
-            E
+            >
+              E
+            </div>
+
+
+            <h1 className="text-2xl font-bold text-slate-900">
+
+              Create your account
+
+            </h1>
+
+
+            <p className="mt-2 text-sm text-slate-500">
+
+              Join ELMKUSOMA and start your
+              digital learning journey.
+
+            </p>
+
           </div>
 
 
-          <h1 className="text-2xl font-bold text-slate-900">
-
-            Create your account
-
-          </h1>
-
-
-          <p className="mt-2 text-sm text-slate-500">
-
-            Join ELMKUSOMA and start your
-            digital learning journey.
-
-          </p>
-
-        </div>
-
-
-        {/* ================================
+          {/* ================================
             ERROR
         ================================= */}
 
-        {error && (
+          {error && (
 
-          <div className="mb-5">
+            <div className="mb-5">
 
-            <Alert type="error">
+              <Alert type="error">
 
-              {error}
+                {error}
 
-            </Alert>
+              </Alert>
 
-          </div>
+            </div>
 
-        )}
+          )}
 
 
-        {/* ================================
+          {/* ================================
             FORM
         ================================= */}
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
 
 
-          {/* ROLE */}
+            {/* ROLE */}
 
-          <label className="block">
+            <label className="block">
 
-            <span className="mb-1 block text-sm font-medium text-slate-700">
+              <span className="mb-1 block text-sm font-medium text-slate-700">
 
-              I am registering as
+                I am registering as
 
-            </span>
+              </span>
 
 
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="
+              <select
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+                className="
                 w-full
                 rounded-xl
                 border
@@ -448,182 +557,348 @@ export default function Register() {
                 focus:ring-2
                 focus:ring-blue-100
               "
+              >
+
+                {ROLES.map((role) => (
+
+                  <option
+                    key={role.value}
+                    value={role.value}
+                  >
+
+                    {role.label}
+
+                  </option>
+
+                ))}
+
+              </select>
+
+            </label>
+
+
+            {/* FULL NAME */}
+
+            <TextField
+              label="Full name"
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              required
+            />
+
+
+            {/* EMAIL */}
+
+            <TextField
+              label="Email address"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              required
+            />
+
+
+            {/* PHONE */}
+
+            <TextField
+              label="Mobile phone"
+              type="tel"
+              name="phoneNumber"
+              value={form.phoneNumber}
+              onChange={handleChange}
+              placeholder="+255..."
+            />
+
+
+            {/* TEACHER INFORMATION */}
+
+            {/* DATE OF BIRTH */}
+
+            <TextField
+              label="Date of Birth"
+              type="date"
+              name="dateOfBirth"
+              value={form.dateOfBirth}
+              onChange={handleChange}
+              required
+            />
+
+            {/* TEACHER / PARENT LOCATION */}
+
+            {(form.role === 'teacher' || form.role === 'parent') && (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium text-slate-700">
+                    Country
+                  </span>
+
+                  <select
+                    name="country"
+                    value={form.country}
+                    onChange={handleChange}
+                    required
+                    className="
+      w-full
+      rounded-xl
+      border
+      border-slate-300
+      bg-white
+      px-3
+      py-2.5
+      text-sm
+      outline-none
+      transition
+      focus:border-blue-500
+      focus:ring-2
+      focus:ring-blue-100
+    "
+                  >
+                    <option value="">Select country</option>
+
+                    <option value="Tanzania">
+                      Tanzania
+                    </option>
+
+                    <option value="Kenya">
+                      Kenya
+                    </option>
+
+                    <option value="Uganda">
+                      Uganda
+                    </option>
+
+                    <option value="Rwanda">
+                      Rwanda
+                    </option>
+
+                    <option value="Burundi">
+                      Burundi
+                    </option>
+
+                    <option value="Other">
+                      Other
+                    </option>
+                  </select>
+                </label>
+
+                {form.country === 'Tanzania' ? (
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-slate-700">
+                      Region
+                    </span>
+
+                    <select
+                      name="region"
+                      value={form.region}
+                      onChange={handleChange}
+                      required
+                      className="
+        w-full
+        rounded-xl
+        border
+        border-slate-300
+        bg-white
+        px-3
+        py-2.5
+        text-sm
+        outline-none
+        transition
+        focus:border-blue-500
+        focus:ring-2
+        focus:ring-blue-100
+      "
+                    >
+                      <option value="">Select region</option>
+
+                      {TANZANIA_REGIONS.map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <TextField
+                    label="Region"
+                    name="region"
+                    value={form.region}
+                    onChange={handleChange}
+                    placeholder="Enter your region"
+                    required
+                  />
+                )}
+
+                {form.country === 'Tanzania' ? (
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-slate-700">
+                      District
+                    </span>
+
+                    <select
+                      name="district"
+                      value={form.district}
+                      onChange={handleChange}
+                      required
+                      disabled={!form.region}
+                      className="
+        w-full
+        rounded-xl
+        border
+        border-slate-300
+        bg-white
+        px-3
+        py-2.5
+        text-sm
+        outline-none
+        transition
+        focus:border-blue-500
+        focus:ring-2
+        focus:ring-blue-100
+        disabled:cursor-not-allowed
+        disabled:bg-slate-100
+      "
+                    >
+                      <option value="">
+                        {form.region
+                          ? 'Select district'
+                          : 'Select region first'}
+                      </option>
+
+                      {getDistrictsByRegion(form.region).map(
+                        (district) => (
+                          <option
+                            key={district}
+                            value={district}
+                          >
+                            {district}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </label>
+                ) : (
+                  <TextField
+                    label="District"
+                    name="district"
+                    value={form.district}
+                    onChange={handleChange}
+                    placeholder="Enter your district"
+                    required
+                  />
+                )}
+              </>
+            )}
+
+
+            {/* PASSWORD */}
+
+            <TextField
+              label="Password"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Create a password"
+              required
+            />
+
+
+            {/* CONFIRM PASSWORD */}
+
+            <TextField
+              label="Confirm password"
+              type="password"
+              name="passwordConfirmation"
+              value={form.passwordConfirmation}
+              onChange={handleChange}
+              placeholder="Confirm your password"
+              required
+            />
+
+
+            {/* SUBMIT */}
+
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full"
             >
 
-              {ROLES.map((role) => (
+              {loading
+                ? 'Creating account...'
+                : 'Create account'
+              }
 
-                <option
-                  key={role.value}
-                  value={role.value}
-                >
-
-                  {role.label}
-
-                </option>
-
-              ))}
-
-            </select>
-
-          </label>
+            </Button>
 
 
-          {/* FULL NAME */}
-
-          <TextField
-            label="Full name"
-            name="fullName"
-            value={form.fullName}
-            onChange={handleChange}
-            placeholder="Enter your full name"
-            required
-          />
+          </form>
 
 
-          {/* EMAIL */}
-
-          <TextField
-            label="Email address"
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="you@example.com"
-            required
-          />
-
-
-          {/* PHONE */}
-
-          <TextField
-            label="Mobile phone"
-            type="tel"
-            name="phoneNumber"
-            value={form.phoneNumber}
-            onChange={handleChange}
-            placeholder="+255..."
-          />
-
-
-          {/* PASSWORD */}
-
-          <TextField
-            label="Password"
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Create a password"
-            required
-          />
-
-
-          {/* CONFIRM PASSWORD */}
-
-          <TextField
-            label="Confirm password"
-            type="password"
-            name="passwordConfirmation"
-            value={form.passwordConfirmation}
-            onChange={handleChange}
-            placeholder="Confirm your password"
-            required
-          />
-
-
-          {/* TEACHER INFORMATION */}
-
-          {form.role === 'teacher' && (
-
-            <Alert type="info">
-
-              Teacher accounts may require
-              verification before accessing
-              all teaching features.
-
-            </Alert>
-
-          )}
-
-
-          {/* SUBMIT */}
-
-          <Button
-            type="submit"
-            loading={loading}
-            className="w-full"
-          >
-
-            {loading
-              ? 'Creating account...'
-              : 'Create account'
-            }
-
-          </Button>
-
-
-        </form>
-
-
-        {/* ================================
+          {/* ================================
             LOGIN LINK
         ================================= */}
 
-        <div className="mt-6 text-center">
+          <div className="mt-6 text-center">
 
 
-          <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600">
 
-            Already have an account?{' '}
+              Already have an account?{' '}
 
 
-            <Link
-              to="/login"
-              className="
+              <Link
+                to="/login"
+                className="
                 font-semibold
                 text-blue-600
                 transition
                 hover:text-blue-700
               "
-            >
+              >
 
-              Log in
+                Log in
 
-            </Link>
-
-
-          </p>
+              </Link>
 
 
-        </div>
+            </p>
 
 
-        {/* BACK HOME */}
+          </div>
 
-        <div className="mt-5 text-center">
 
-          <Link
-            to="/"
-            className="
+          {/* BACK HOME */}
+
+          <div className="mt-5 text-center">
+
+            <Link
+              to="/"
+              className="
               text-xs
               text-slate-500
               transition
               hover:text-blue-600
             "
-          >
+            >
 
-            ← Back to home
+              ← Back to home
 
-          </Link>
+            </Link>
+
+          </div>
+
 
         </div>
 
 
       </div>
 
-
     </div>
-
   );
 
 }
