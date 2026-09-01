@@ -229,14 +229,6 @@ export default function PublicLayout() {
             </Link>
 
 
-            <Link
-              to="/notes-library"
-              className="transition hover:text-forest"
-            >
-              Notes Library
-            </Link>
-
-
             <a
               href="/#about"
               className="transition hover:text-forest"
@@ -494,26 +486,6 @@ export default function PublicLayout() {
                 </Link>
 
 
-                <Link
-                  to="/notes-library"
-                  onClick={closeMobileMenu}
-                  className="
-                    block
-                    rounded-lg
-                    px-4
-                    py-3
-                    text-sm
-                    font-medium
-                    text-charcoal/80
-                    transition
-                    hover:bg-forest/5
-                    hover:text-forest
-                  "
-                >
-                  Notes Library
-                </Link>
-
-
                 <a
                   href="/#about"
                   onClick={closeMobileMenu}
@@ -684,7 +656,8 @@ export default function PublicLayout() {
           FOOTER
       ====================================== */}
 
-      <footer className="mt-16 border-t border-forest/15 bg-white">
+      {!user && (
+  <footer className="mt-16 border-t border-forest/15 bg-white">
 
         <div className="mx-auto max-w-7xl px-6 py-12">
 
@@ -764,14 +737,6 @@ export default function PublicLayout() {
                   className="transition hover:text-forest"
                 >
                   Schools
-                </Link>
-
-
-                <Link
-                  to="/notes-library"
-                  className="transition hover:text-forest"
-                >
-                  Notes Library
                 </Link>
 
 
@@ -859,6 +824,7 @@ export default function PublicLayout() {
         </div>
 
       </footer>
+)}
 
 
     </div>

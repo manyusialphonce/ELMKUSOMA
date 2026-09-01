@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { to: '/teacher/subscription', label: 'Subscription' },
   { to: '/teacher/notifications', label: 'Notifications' },
   { to: '/teacher/profile', label: 'Profile' },
+  { to: '/teacher/notes-library', label: 'Notes Library' },
 ];
 
 export default function TeacherLayout() {
