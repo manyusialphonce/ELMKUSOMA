@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -17,7 +18,9 @@ import ProtectedRoute from './ProtectedRoute';
 // PUBLIC PAGES
 // ================================
 
-const Home = lazy(() => import('../views/public/Home'));
+const Home = lazy(() =>
+  import('../views/public/Home')
+);
 
 const NotesLibrary = lazy(() =>
   import('../views/public/NotesLibrary')
@@ -54,6 +57,10 @@ const Login = lazy(() =>
 
 const Register = lazy(() =>
   import('../views/auth/Register')
+);
+
+const ForgotPassword = lazy(() =>
+  import('../views/auth/ForgotPassword')
 );
 
 
@@ -149,11 +156,13 @@ function PageFallback() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center py-24">
       <div className="text-center">
+
         <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
 
         <p className="text-sm font-medium text-gray-500">
           Loading...
         </p>
+
       </div>
     </div>
   );
@@ -177,6 +186,7 @@ const s = (element) => (
 
 const router = createBrowserRouter([
 
+
   // ==================================
   // PUBLIC AREA
   // ==================================
@@ -191,7 +201,6 @@ const router = createBrowserRouter([
         element: s(<Home />),
       },
 
-      
       {
         path: '/notes-library',
         element: s(<NotesLibrary />),
@@ -225,27 +234,34 @@ const router = createBrowserRouter([
     ],
   },
 
-// ==================================
-// AUTH AREA
-// ==================================
 
-{
-  element: <AuthLayout />,
+  // ==================================
+  // AUTH AREA
+  // ==================================
 
-  children: [
+  {
+    element: <AuthLayout />,
 
-    {
-      path: '/login',
-      element: s(<Login />),
-    },
+    children: [
 
-    {
-      path: '/register',
-      element: s(<Register />),
-    },
+      {
+        path: '/login',
+        element: s(<Login />),
+      },
 
-  ],
-},
+      {
+        path: '/register',
+        element: s(<Register />),
+      },
+
+      {
+        path: '/forgot-password',
+        element: s(<ForgotPassword />),
+      },
+
+    ],
+  },
+
 
   // ==================================
   // STUDENT AREA
@@ -448,6 +464,7 @@ const router = createBrowserRouter([
 
     element: (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+
         <div className="text-center">
 
           <p className="text-6xl font-bold text-blue-600">
@@ -463,6 +480,7 @@ const router = createBrowserRouter([
           </p>
 
         </div>
+
       </div>
     ),
 
