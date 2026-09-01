@@ -212,13 +212,7 @@ const router = createBrowserRouter([
       },
 
 
-      // NOTES LIBRARY
-      {
-        path: '/notes-library',
-        element: s(<NotesLibrary />),
-      },
-
-
+      
       // CERTIFICATE VERIFICATION
       {
         path: '/certificates/verify',
@@ -348,6 +342,10 @@ const router = createBrowserRouter([
         element: <StudentLayout />,
 
         children: [
+          {
+            path: 'notes-library',
+            element: s(<NotesLibrary />),
+          },
 
           // STUDENT DASHBOARD
           {
@@ -433,6 +431,11 @@ const router = createBrowserRouter([
 
           // QUIZZES
           {
+            path: 'notes-library',
+            element: s(<NotesLibrary />),
+          },
+
+          {
             path: 'quizzes',
             element: s(<TeacherQuizzes />),
           },
@@ -475,6 +478,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: s(<ParentDashboard />),
+          },
+          {
+            path: 'notes-library',
+            element: s(<NotesLibrary />),
           },
 
         ],
