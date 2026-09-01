@@ -226,15 +226,16 @@ export default function Login() {
 
   return (
 
-    <div className="mx-auto mt-16 mb-16 w-full max-w-md px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-blue-100 to-slate-200">
+      <div className="mx-auto my-12 w-full max-w-md px-4">
 
 
-      {/* ==================================
+        {/* ==================================
           LOGIN CARD
       =================================== */}
 
-      <div
-        className="
+        <div
+          className="
           rounded-2xl
           border
           border-slate-200
@@ -243,20 +244,20 @@ export default function Login() {
           shadow-lg
           sm:p-8
         "
-      >
+        >
 
 
-        {/* ================================
+          {/* ================================
             HEADER
         ================================= */}
 
-        <div className="mb-8 text-center">
+          <div className="mb-8 text-center">
 
 
-          {/* LOGO PLACEHOLDER */}
+            {/* LOGO PLACEHOLDER */}
 
-          <div
-            className="
+            <div
+              className="
               mx-auto
               mb-4
               flex
@@ -271,162 +272,163 @@ export default function Login() {
               text-white
               shadow-md
             "
-          >
-            E
+            >
+              E
+            </div>
+
+
+            <h1 className="text-2xl font-bold text-slate-900">
+
+              Welcome back
+
+            </h1>
+
+
+            <p className="mt-2 text-sm text-slate-500">
+
+              Log in to continue learning with ELMKUSOMA.
+
+            </p>
+
           </div>
 
 
-          <h1 className="text-2xl font-bold text-slate-900">
-
-            Welcome back
-
-          </h1>
-
-
-          <p className="mt-2 text-sm text-slate-500">
-
-            Log in to continue learning with ELMKUSOMA.
-
-          </p>
-
-        </div>
-
-
-        {/* ================================
+          {/* ================================
             ERROR MESSAGE
         ================================= */}
 
-        {error && (
+          {error && (
 
-          <div className="mb-5">
+            <div className="mb-5">
 
-            <Alert type="error">
+              <Alert type="error">
 
-              {error}
+                {error}
 
-            </Alert>
+              </Alert>
 
-          </div>
+            </div>
 
-        )}
+          )}
 
 
-        {/* ================================
+          {/* ================================
             LOGIN FORM
         ================================= */}
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-        >
-
-
-          {/* EMAIL */}
-
-          <TextField
-            label="Email Address"
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="you@example.com"
-            required
-          />
-
-
-          {/* PASSWORD */}
-
-          <TextField
-            label="Password"
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-          />
-
-
-          {/* LOGIN BUTTON */}
-
-          <Button
-            type="submit"
-            loading={loading}
-            className="w-full"
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
           >
 
-            {loading
-              ? 'Logging in...'
-              : 'Log in'
-            }
 
-          </Button>
+            {/* EMAIL */}
+
+            <TextField
+              label="Email Address"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              required
+            />
 
 
-        </form>
+            {/* PASSWORD */}
+
+            <TextField
+              label="Password"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              required
+            />
 
 
-        {/* ================================
+            {/* LOGIN BUTTON */}
+
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full"
+            >
+
+              {loading
+                ? 'Logging in...'
+                : 'Log in'
+              }
+
+            </Button>
+
+
+          </form>
+
+
+          {/* ================================
             REGISTER LINK
         ================================= */}
 
-        <div className="mt-6 text-center">
+          <div className="mt-6 text-center">
 
 
-          <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600">
 
-            Don't have an account?{' '}
+              Don't have an account?{' '}
 
 
-            <Link
-              to="/register"
-              className="
+              <Link
+                to="/register"
+                className="
                 font-semibold
                 text-blue-600
                 transition
                 hover:text-blue-700
               "
-            >
+              >
 
-              Create an account
+                Create an account
 
-            </Link>
-
-
-          </p>
+              </Link>
 
 
-        </div>
+            </p>
 
 
-        {/* ================================
+          </div>
+
+
+          {/* ================================
             BACK HOME
         ================================= */}
 
-        <div className="mt-5 text-center">
+          <div className="mt-5 text-center">
 
 
-          <Link
-            to="/"
-            className="
+            <Link
+              to="/"
+              className="
               text-xs
               text-slate-500
               transition
               hover:text-blue-600
             "
-          >
+            >
 
-            ← Back to home
+              ← Back to home
 
-          </Link>
+            </Link>
+
+
+          </div>
 
 
         </div>
 
 
       </div>
-
-
     </div>
 
   );
