@@ -1,4 +1,10 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import {
+  FaInstagram,
+  FaLinkedinIn,
+  FaFacebookF,
+  FaYoutube,
+} from 'react-icons/fa';
 import { useState } from 'react';
 import useAuthStore from '../stores/authStore';
 
@@ -659,7 +665,7 @@ export default function PublicLayout() {
       ====================================== */}
 
       {!user && (
-  <footer className="mt-16 border-t border-forest/15 bg-white">
+  <footer className="mt-16 border-t border-sky-200 bg-sky-50">
 
         <div className="mx-auto max-w-7xl px-6 py-12">
 
@@ -755,78 +761,134 @@ export default function PublicLayout() {
             </div>
 
 
+
+
             {/* =================================
-                OUR MISSION
-            ================================== */}
+    CONTACT
+================================== */}
 
-            <div>
+<div>
 
-              <h4 className="font-display font-semibold text-ink">
-                Our Mission
-              </h4>
+  <h4 className="font-display font-semibold text-gray-900">
+    Contact
+  </h4>
 
+  <div className="mt-4 space-y-4 text-sm font-bold text-gray-900">
 
-              <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
+    <a
+      href="mailto:info@elmkusuma.co.tz"
+      className="block text-gray-900 transition hover:text-blue-900"
+    >
+      info@elmkusuma.co.tz
+    </a>
 
-                To make education more accessible, connected and flexible
-                through digital technology.
+    <div className="pt-2">
 
-              </p>
+      <p className="mb-3 font-bold text-gray-900">
+        Follow us
+      </p>
 
+      <div className="flex items-center gap-3">
 
-              <p className="mt-5 text-sm font-medium text-forest">
+  <a
+    href="#"
+    aria-label="Instagram"
+    className="
+      flex h-10 w-10 items-center justify-center
+      rounded-full
+      bg-gray-900
+      text-white
+      transition
+      hover:bg-forest
+    "
+  >
+    <FaInstagram size={19} />
+  </a>
 
-                Built for Tanzania.
+  <a
+    href="#"
+    aria-label="LinkedIn"
+    className="
+      flex h-10 w-10 items-center justify-center
+      rounded-full
+      bg-gray-900
+      text-white
+      transition
+      hover:bg-forest
+    "
+  >
+    <FaLinkedinIn size={19} />
+  </a>
 
-              </p>
+  <a
+    href="#"
+    aria-label="Facebook"
+    className="
+      flex h-10 w-10 items-center justify-center
+      rounded-full
+      bg-gray-900
+      text-white
+      transition
+      hover:bg-forest
+    "
+  >
+    <FaFacebookF size={19} />
+  </a>
+
+  <a
+    href="#"
+    aria-label="YouTube"
+    className="
+      flex h-10 w-10 items-center justify-center
+      rounded-full
+      bg-gray-900
+      text-white
+      transition
+      hover:bg-forest
+    "
+  >
+    <FaYoutube size={19} />
+  </a>
+
+</div>
+
+    </div>
+
+  </div>
 
             </div>
 
-
           </div>
-
 
           {/* =================================
               COPYRIGHT
           ================================== */}
 
           <div className="
-            mt-10
-            flex
-            flex-col
-            gap-3
-            border-t
-            border-forest/10
-            pt-6
-            text-center
-            md:flex-row
-            md:items-center
-            md:justify-between
+             mt-10
+             border-t
+             border-forest/10
+             pt-6
+             text-center
           ">
 
 
             <p className="text-xs text-muted">
 
-              © {new Date().getFullYear()} ELMKUSOMA.
-              All rights reserved.
+              <p className="w-full text-center text-xs text-gray-900">
+              © {new Date().getFullYear()} ELMKUSOMA. All rights reserved.
+            </p>
 
             </p>
 
-
-            <p className="text-xs text-muted">
-
-              Education without limits.
-
-            </p>
 
 
           </div>
 
-
         </div>
 
       </footer>
-)}
+      )}
 
 
     </div>
