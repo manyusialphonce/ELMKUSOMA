@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #16241e;
+  --color-ink-soft: #1f3129;
+  --color-paper: #faf9f4;
+  --color-marigold: #e8a33d;
+  --color-marigold-deep: #c9821f;
+  --color-forest: #2f6b4f;
+  --color-margin: #c1443d;
+  --color-charcoal: #232323;
+  --color-muted: #6e6b5e;
+
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-charcoal);
+  background-color: var(--color-paper);
+}
+
+/* Signature motif: the red daftari (exercise book) margin rule, reused as a
+   structural device across the marketing page rather than pure decoration. */
+.ruled-paper {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 34px,
+    rgba(47, 107, 79, 0.08) 34px,
+    rgba(47, 107, 79, 0.08) 35px
+  );
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 32s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

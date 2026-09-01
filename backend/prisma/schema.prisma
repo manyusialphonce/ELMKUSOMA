@@ -1,0 +1,1136 @@
+// ELMKUSOMA — Prisma schema
+// Run locally: npm install && npx prisma generate && npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// 1. CORE
+// ---------------------------------------------------------------------------
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+  DEACTIVATED
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  SCHOOL_ADMINISTRATOR
+  ADMINISTRATOR
+  SUPER_ADMINISTRATOR
+  ADVERTISER
+  PARENT
+}
+
+enum IdentityDocumentType {
+  NIDA
+  PASSPORT
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id                 Int            @id @default(autoincrement())
+  fullName           String
+  email              String         @unique
+  phoneNumber        String?        @unique
+  password           String
+  gender             String?
+  dateOfBirth        DateTime?
+  profileImage       String?
+  languagePreference String         @default("en")
+  role               UserRole
+  accountStatus      AccountStatus  @default(ACTIVE)
+
+  // Identity verification — required for Teachers/Lecturers before they can
+  // publish content (per founder's notes: NIDA/Passport + faculty + photo).
+  identityDocumentType   IdentityDocumentType?
+  identityDocumentNumber String?
+  verificationStatus     VerificationStatus    @default(UNVERIFIED)
+  facultyId              Int?
+  faculty                Faculty?              @relation(fields: [facultyId], references: [id])
+
+  regionId          Int?
+  region            Region?         @relation(fields: [regionId], references: [id])
+  districtId        Int?
+  district          District?       @relation(fields: [districtId], references: [id])
+  educationLevelId  Int?
+  educationLevel    EducationLevel? @relation(fields: [educationLevelId], references: [id])
+  schoolId          Int?
+  school            School?         @relation("StudentSchool", fields: [schoolId], references: [id])
+
+  // Reverse relations
+  administeredSchools School[]        @relation("SchoolAdministrator")
+  teachingSchools      SchoolTeacher[]
+  enrolledSchools      SchoolStudent[]
+  subscriptions        Subscription[]
+  payments             Payment[]
+
+  teachingLiveClasses  LiveClass[]             @relation("TeacherLiveClasses")
+  attendances          Attendance[]            @relation("StudentAttendances")
+  questionsAsked       StudentQuestion[]       @relation("StudentQuestions")
+  uploadedRecordings   Recording[]             @relation("UploadedRecordings")
+  uploadedResources    Resource[]              @relation("UploadedResources")
+  quizzesCreated       Quiz[]                  @relation("TeacherQuizzes")
+  quizAttempts         QuizAttempt[]           @relation("StudentQuizAttempts")
+  assignmentsCreated   Assignment[]            @relation("TeacherAssignments")
+  submissions          AssignmentSubmission[]  @relation("StudentSubmissions")
+  notifications        Notification[]
+
+  // Self-paced lessons (SRS v1.0: distinct from LiveClass/Recording)
+  lessonsCreated       Lesson[]                @relation("TeacherLessons")
+  lessonProgress       LessonProgress[]        @relation("StudentLessonProgress")
+
+  // Certificates (SRS v1.0 §10.1 / §16)
+  certificates         Certificate[]           @relation("StudentCertificates")
+
+  // Parent-child links (SRS v1.0 — either side of the relationship)
+  childLinks           ParentStudent[]         @relation("ParentLinks")
+  parentLinks          ParentStudent[]         @relation("StudentLinks")
+
+  notificationPreference NotificationPreference?
+
+  auditLogs            AuditLog[]
+
+  nurseryGameProgress  NurseryGameProgress[]   @relation("StudentNurseryGames")
+  liveChatMessages     LiveChatMessage[]
+  advertisements       Advertisement[]
+  setupDrafts          InstitutionSetupDraft[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("users")
+}
+
+// Faculties for university-level lecturers (e.g. UDSM, UDOM + their faculties)
+model Faculty {
+  id           Int      @id @default(autoincrement())
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  name         String
+  lecturers    User[]
+  departments  Department[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([universityId, name])
+  @@map("faculties")
+}
+
+model University {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique // e.g. UDSM, UDOM
+  faculties Faculty[]
+
+  createdAt DateTime @default(now())
+
+  @@map("universities")
+}
+
+// ---------------------------------------------------------------------------
+// 2. GEOGRAPHY
+// ---------------------------------------------------------------------------
+
+model Country {
+  id      Int      @id @default(autoincrement())
+  name    String
+  code    String   @unique
+  regions Region[]
+
+  createdAt DateTime @default(now())
+
+  @@map("countries")
+}
+
+model Region {
+  id        Int        @id @default(autoincrement())
+  countryId Int
+  country   Country    @relation(fields: [countryId], references: [id])
+  name      String
+  districts District[]
+  schools   School[]
+  users     User[]
+  targetedAdvertisements Advertisement[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([countryId, name])
+  @@map("regions")
+}
+
+model District {
+  id       Int      @id @default(autoincrement())
+  regionId Int
+  region   Region   @relation(fields: [regionId], references: [id])
+  name     String
+  schools  School[]
+  users    User[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([regionId, name])
+  @@map("districts")
+}
+
+// ---------------------------------------------------------------------------
+// 3. EDUCATION STRUCTURE
+// ---------------------------------------------------------------------------
+
+model EducationLevel {
+  id        Int             @id @default(autoincrement())
+  name      String          // Nursery, Primary, Secondary, Advanced, VETA, College, University
+  slug      String          @unique
+  sortOrder Int             @default(0)
+
+  classes  SchoolClass[]
+  subjects EducationLevelSubject[]
+  schools  SchoolEducationLevel[]
+  users    User[]
+
+  liveClasses LiveClass[]
+  recordings  Recording[]
+  resources   Resource[]
+  lessons     Lesson[]
+  targetedAdvertisements Advertisement[]
+
+  createdAt DateTime @default(now())
+
+  @@map("education_levels")
+}
+
+model SchoolClass {
+  id               Int            @id @default(autoincrement())
+  educationLevelId Int
+  educationLevel   EducationLevel @relation(fields: [educationLevelId], references: [id])
+  name             String         // e.g. "Form 1", "Standard 4"
+  sortOrder        Int            @default(0)
+
+  students SchoolStudent[]
+
+  liveClasses LiveClass[]
+  recordings  Recording[]
+  assignments Assignment[]
+  lessons     Lesson[]
+
+  createdAt DateTime @default(now())
+
+  @@map("classes")
+}
+
+model Subject {
+  id             Int                     @id @default(autoincrement())
+  name           String
+  slug           String                  @unique
+  educationLevels EducationLevelSubject[]
+  schools        SchoolSubject[]
+
+  liveClasses LiveClass[]
+  recordings  Recording[]
+  resources   Resource[]
+  quizzes     Quiz[]
+  assignments Assignment[]
+  lessons     Lesson[]
+
+  createdAt DateTime @default(now())
+
+  @@map("subjects")
+}
+
+// Pivot: subjects offered per education level
+model EducationLevelSubject {
+  id               Int            @id @default(autoincrement())
+  educationLevelId Int
+  educationLevel   EducationLevel @relation(fields: [educationLevelId], references: [id], onDelete: Cascade)
+  subjectId        Int
+  subject          Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([educationLevelId, subjectId])
+  @@map("education_level_subject")
+}
+
+// ---------------------------------------------------------------------------
+// 4. SCHOOLS
+// ---------------------------------------------------------------------------
+
+model School {
+  id                Int      @id @default(autoincrement())
+  name              String
+  slug              String   @unique
+  logo              String?
+  description       String?
+  regionId          Int
+  region            Region   @relation(fields: [regionId], references: [id])
+  districtId        Int
+  district          District @relation(fields: [districtId], references: [id])
+  locationDetails   String?
+  phoneNumber       String?
+  email             String?
+  website           String?
+  administratorId   Int?
+  administrator     User?    @relation("SchoolAdministrator", fields: [administratorId], references: [id])
+  isVerified        Boolean  @default(false)
+
+  // Per founder's notes: equipment is expensive, so each school/college needs
+  // its own studio before it can offer live streaming. Schools without a
+  // studio can still publish recorded lessons only.
+  hasStudio         Boolean  @default(false)
+
+  students        User[]                 @relation("StudentSchool")
+  teachers        SchoolTeacher[]
+  enrolledStudents SchoolStudent[]
+  educationLevels SchoolEducationLevel[]
+  subjects        SchoolSubject[]
+  resources       Resource[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("schools")
+}
+
+model SchoolEducationLevel {
+  id               Int            @id @default(autoincrement())
+  schoolId         Int
+  school           School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  educationLevelId Int
+  educationLevel   EducationLevel @relation(fields: [educationLevelId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, educationLevelId])
+  @@map("school_education_level")
+}
+
+model SchoolTeacher {
+  id        Int      @id @default(autoincrement())
+  schoolId  Int
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacherId Int
+  teacher   User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([schoolId, teacherId])
+  @@map("school_teacher")
+}
+
+model SchoolStudent {
+  id        Int          @id @default(autoincrement())
+  schoolId  Int
+  school    School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId Int
+  student   User         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   Int?
+  class     SchoolClass? @relation(fields: [classId], references: [id])
+  joinedAt  DateTime     @default(now())
+
+  @@unique([schoolId, studentId])
+  @@map("school_student")
+}
+
+model SchoolSubject {
+  id        Int     @id @default(autoincrement())
+  schoolId  Int
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, subjectId])
+  @@map("school_subject")
+}
+
+// ---------------------------------------------------------------------------
+// 5. COMMERCE (Subscriptions & Payments)
+// ---------------------------------------------------------------------------
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model SubscriptionPlan {
+  id           Int            @id @default(autoincrement())
+  name         String
+  slug         String         @unique
+  description  String?
+  price        Decimal        @db.Decimal(10, 2)
+  currency     String         @default("TZS")
+  durationDays Int
+  isActive     Boolean        @default(true)
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                 Int                @id @default(autoincrement())
+  userId             Int
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionPlanId Int
+  plan               SubscriptionPlan   @relation(fields: [subscriptionPlanId], references: [id])
+  status             SubscriptionStatus @default(PENDING)
+  startsAt           DateTime?
+  expiresAt          DateTime?
+  cancelledAt        DateTime?
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                 Int            @id @default(autoincrement())
+  userId             Int
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId     Int?
+  subscription       Subscription?  @relation(fields: [subscriptionId], references: [id])
+  amount             Decimal        @db.Decimal(10, 2)
+  currency           String         @default("TZS")
+  provider           String         // selcom | clickpesa
+  providerReference  String?
+  status             PaymentStatus  @default(PENDING)
+  metadata           Json?
+  paidAt             DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([providerReference])
+  @@map("payments")
+}
+
+// ---------------------------------------------------------------------------
+// 6. LEARNING — Live Classes, Attendance, Student Questions
+// ---------------------------------------------------------------------------
+
+enum LiveClassStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model LiveClass {
+  id               Int             @id @default(autoincrement())
+  teacherId        Int
+  teacher          User            @relation("TeacherLiveClasses", fields: [teacherId], references: [id])
+  subjectId        Int
+  subject          Subject         @relation(fields: [subjectId], references: [id])
+  educationLevelId Int
+  educationLevel   EducationLevel  @relation(fields: [educationLevelId], references: [id])
+  classId          Int?
+  schoolClass      SchoolClass?    @relation(fields: [classId], references: [id])
+  topic            String
+  description      String?
+  startTime        DateTime
+  durationMinutes  Int
+  status           LiveClassStatus @default(SCHEDULED)
+  questionsEnabled Boolean         @default(false)
+  // Set by the streaming provider (Agora/100ms) when the class starts —
+  // the SPA never talks to Laravel/Express for the video stream itself.
+  streamingRoomId  String?
+  startedAt        DateTime?
+  endedAt          DateTime?
+
+  attendances       Attendance[]
+  studentQuestions  StudentQuestion[]
+  recording         Recording?
+  chatMessages      LiveChatMessage[]
+  quizzes           Quiz[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teacherId, startTime])
+  @@map("live_classes")
+}
+
+model Attendance {
+  id           Int       @id @default(autoincrement())
+  liveClassId  Int
+  liveClass    LiveClass @relation(fields: [liveClassId], references: [id], onDelete: Cascade)
+  studentId    Int
+  student      User      @relation("StudentAttendances", fields: [studentId], references: [id], onDelete: Cascade)
+  joinedAt     DateTime  @default(now())
+  leftAt       DateTime?
+  durationSecs Int?
+
+  @@unique([liveClassId, studentId])
+  @@map("attendances")
+}
+
+enum QuestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ANSWERED
+}
+
+// SRS 10.8 workflow: Student -> Request Permission -> Teacher -> Approve/Reject -> Student Asks -> Teacher Responds
+model StudentQuestion {
+  id          Int            @id @default(autoincrement())
+  liveClassId Int
+  liveClass   LiveClass      @relation(fields: [liveClassId], references: [id], onDelete: Cascade)
+  studentId   Int
+  student     User           @relation("StudentQuestions", fields: [studentId], references: [id], onDelete: Cascade)
+  question    String?
+  answer      String?
+  status      QuestionStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("student_questions")
+}
+
+// ---------------------------------------------------------------------------
+// 7. LEARNING — Recordings & Notes Library (Resources)
+// ---------------------------------------------------------------------------
+
+enum ContentPublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Recording {
+  id               Int                  @id @default(autoincrement())
+  liveClassId      Int?                 @unique
+  liveClass        LiveClass?           @relation(fields: [liveClassId], references: [id])
+  uploadedById     Int
+  uploadedBy       User                 @relation("UploadedRecordings", fields: [uploadedById], references: [id])
+  title            String
+  description      String?
+  subjectId        Int
+  subject          Subject              @relation(fields: [subjectId], references: [id])
+  educationLevelId Int
+  educationLevel   EducationLevel       @relation(fields: [educationLevelId], references: [id])
+  classId          Int?
+  schoolClass      SchoolClass?         @relation(fields: [classId], references: [id])
+  // Object storage key/path, not a public URL — access is always brokered
+  // through a signed-URL endpoint (content protection, SRS §11).
+  storageKey       String
+  thumbnail        String?
+  durationSeconds  Int?
+  status           ContentPublishStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("recordings")
+}
+
+enum ResourceType {
+  NOTES
+  BOOK
+  PAST_PAPER
+  SYLLABUS
+  REFERENCE_MATERIAL
+  TEACHER_GUIDE
+  DOCUMENT
+  REVISION_MATERIAL
+  OTHER
+}
+
+model Resource {
+  id               Int                  @id @default(autoincrement())
+  uploadedById     Int
+  uploadedBy       User                 @relation("UploadedResources", fields: [uploadedById], references: [id])
+  title            String
+  description      String?
+  type             ResourceType
+  subjectId        Int?
+  subject          Subject?             @relation(fields: [subjectId], references: [id])
+  educationLevelId Int?
+  educationLevel   EducationLevel?      @relation(fields: [educationLevelId], references: [id])
+  schoolId         Int?
+  school           School?              @relation(fields: [schoolId], references: [id])
+  language         String               @default("en")
+  // Object storage key, not a public URL — same content-protection rule as Recording.
+  storageKey       String
+  status           ContentPublishStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("resources")
+}
+
+// ---------------------------------------------------------------------------
+// 8. ASSESSMENT — Quizzes & Assignments
+// ---------------------------------------------------------------------------
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+model Quiz {
+  id            Int       @id @default(autoincrement())
+  teacherId     Int
+  teacher       User      @relation("TeacherQuizzes", fields: [teacherId], references: [id])
+  liveClassId   Int?      // set when launched as a Live Quiz (SRS 10.12)
+  liveClass     LiveClass? @relation(fields: [liveClassId], references: [id])
+  subjectId     Int
+  subject       Subject   @relation(fields: [subjectId], references: [id])
+  title         String
+  description   String?
+  timeLimitMins Int?
+  startTime     DateTime?
+  endTime       DateTime?
+  attemptLimit  Int       @default(1)
+  passingScore  Int?
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id            Int          @id @default(autoincrement())
+  quizId        Int
+  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  type          QuestionType
+  questionText  String
+  // For MULTIPLE_CHOICE: [{ text, isCorrect }]; for TRUE_FALSE: [{text:"True",isCorrect},...]
+  options       Json?
+  correctAnswer String?      // used for SHORT_ANSWER / TRUE_FALSE grading
+  points        Int          @default(1)
+  sortOrder     Int          @default(0)
+
+  answers QuizAnswer[]
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          Int       @id @default(autoincrement())
+  quizId      Int
+  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  studentId   Int
+  student     User      @relation("StudentQuizAttempts", fields: [studentId], references: [id], onDelete: Cascade)
+  score       Int?
+  submittedAt DateTime?
+
+  answers QuizAnswer[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([quizId, studentId, createdAt])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id             Int          @id @default(autoincrement())
+  attemptId      Int
+  attempt        QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  quizQuestionId Int
+  question       QuizQuestion @relation(fields: [quizQuestionId], references: [id], onDelete: Cascade)
+  answerText     String?
+  isCorrect      Boolean?
+  pointsAwarded  Int?
+
+  @@unique([attemptId, quizQuestionId])
+  @@map("quiz_answers")
+}
+
+enum SubmissionStatus {
+  NOT_SUBMITTED
+  SUBMITTED
+  LATE
+  GRADED
+}
+
+model Assignment {
+  id           Int       @id @default(autoincrement())
+  teacherId    Int
+  teacher      User      @relation("TeacherAssignments", fields: [teacherId], references: [id])
+  subjectId    Int
+  subject      Subject   @relation(fields: [subjectId], references: [id])
+  classId      Int?
+  schoolClass  SchoolClass? @relation(fields: [classId], references: [id])
+  title        String
+  description  String?
+  instructions String?
+  attachment   String?   // storage key, optional
+  deadline     DateTime
+  maxScore     Int       @default(100)
+
+  submissions AssignmentSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           Int              @id @default(autoincrement())
+  assignmentId Int
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    Int
+  student      User             @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+  attachment   String?          // storage key
+  answerText   String?
+  status       SubmissionStatus @default(NOT_SUBMITTED)
+  score        Int?
+  teacherComment String?
+  submittedAt  DateTime?
+  gradedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([assignmentId, studentId])
+  @@map("assignment_submissions")
+}
+
+// ---------------------------------------------------------------------------
+// 9. SUPPORT — Notifications
+// ---------------------------------------------------------------------------
+
+enum NotificationType {
+  NEW_LIVE_CLASS
+  UPCOMING_LIVE_CLASS
+  NEW_RECORDING
+  NEW_QUIZ
+  NEW_ASSIGNMENT
+  ASSIGNMENT_DEADLINE
+  QUIZ_RESULT
+  ASSIGNMENT_RESULT
+  PAYMENT_CONFIRMATION
+  SUBSCRIPTION_EXPIRY
+  NEW_ANNOUNCEMENT
+  ACCOUNT_SECURITY
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  data      Json?            // e.g. { liveClassId: 12 } for deep-linking
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+// Per-user delivery/category preferences (SRS v1.0 §16.2: at most one per user)
+model NotificationPreference {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emailEnabled Boolean @default(true)
+  smsEnabled   Boolean @default(false)
+  inAppEnabled Boolean @default(true)
+  // Per-category opt-out, e.g. { "NEW_ANNOUNCEMENT": false }
+  categoryFlags Json?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_preferences")
+}
+
+// ---------------------------------------------------------------------------
+// 10. LEARNING — Self-paced Lessons & Progress (SRS v1.0: distinct from
+//     live classes and recordings — structured, sequential course content)
+// ---------------------------------------------------------------------------
+
+enum LessonType {
+  VIDEO
+  TEXT
+  MIXED
+}
+
+model Lesson {
+  id               Int                  @id @default(autoincrement())
+  teacherId        Int
+  teacher          User                 @relation("TeacherLessons", fields: [teacherId], references: [id])
+  subjectId        Int
+  subject          Subject              @relation(fields: [subjectId], references: [id])
+  educationLevelId Int
+  educationLevel   EducationLevel       @relation(fields: [educationLevelId], references: [id])
+  classId          Int?
+  schoolClass      SchoolClass?         @relation(fields: [classId], references: [id])
+  title            String
+  description      String?
+  type             LessonType           @default(VIDEO)
+  contentUrl       String?              // storage key for video, or null for text lessons
+  bodyText         String?              // rendered lesson body for TEXT/MIXED lessons
+  sortOrder        Int                  @default(0)
+  status           ContentPublishStatus @default(DRAFT)
+
+  progress LessonProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lessons")
+}
+
+model LessonProgress {
+  id              Int       @id @default(autoincrement())
+  lessonId        Int
+  lesson          Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  studentId       Int
+  student         User      @relation("StudentLessonProgress", fields: [studentId], references: [id], onDelete: Cascade)
+  progressPercent Int       @default(0)
+  completedAt     DateTime?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([lessonId, studentId])
+  @@map("lesson_progress")
+}
+
+// ---------------------------------------------------------------------------
+// 11. CERTIFICATES (SRS v1.0 §10.1 / §16 / §23 — ISSUED -> REVOKED)
+// ---------------------------------------------------------------------------
+
+enum CertificateStatus {
+  ISSUED
+  REVOKED
+}
+
+model Certificate {
+  id                Int               @id @default(autoincrement())
+  studentId         Int
+  student           User              @relation("StudentCertificates", fields: [studentId], references: [id], onDelete: Cascade)
+  title             String
+  institutionName   String?
+  certificateNumber String            @unique
+  verificationCode  String            @unique
+  status            CertificateStatus @default(ISSUED)
+  // What this certificate attests to, e.g. { subjectId, educationLevelId } or { quizId }
+  metadata          Json?
+  issuedAt          DateTime          @default(now())
+  revokedAt         DateTime?
+
+  @@map("certificates")
+}
+
+// ---------------------------------------------------------------------------
+// 12. PARENT MODULE (SRS v1.0 §4 / §16.2: parent-student pair is unique)
+// ---------------------------------------------------------------------------
+
+model ParentStudent {
+  id           Int      @id @default(autoincrement())
+  parentId     Int
+  parent       User     @relation("ParentLinks", fields: [parentId], references: [id], onDelete: Cascade)
+  studentId    Int
+  student      User     @relation("StudentLinks", fields: [studentId], references: [id], onDelete: Cascade)
+  relationship String?  // e.g. "Mother", "Father", "Guardian"
+
+  createdAt DateTime @default(now())
+
+  @@unique([parentId, studentId])
+  @@map("parent_student")
+}
+
+// ---------------------------------------------------------------------------
+// 14. NURSERY GAMES (from founder's original sketches: "Baby 1/2/3" —
+//     video reading, video math, reading game video, per SRS v1.0 §16.2)
+// ---------------------------------------------------------------------------
+
+enum NurseryGameType {
+  VIDEO_READING
+  VIDEO_MATH
+  READING_GAME
+  OTHER
+}
+
+model NurseryGame {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String?
+  type        NurseryGameType
+  // "Baby 1", "Baby 2", "Baby 3" — the specific nursery sub-group this game
+  // targets, matching the founder's sketch (distinct from SchoolClass).
+  babyGroup   String?
+  contentUrl  String          // storage key for the game/video asset
+  thumbnail   String?
+  status      ContentPublishStatus @default(DRAFT)
+
+  progress NurseryGameProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("nursery_games")
+}
+
+model NurseryGameProgress {
+  id            Int         @id @default(autoincrement())
+  nurseryGameId Int
+  game          NurseryGame @relation(fields: [nurseryGameId], references: [id], onDelete: Cascade)
+  studentId     Int
+  student       User        @relation("StudentNurseryGames", fields: [studentId], references: [id], onDelete: Cascade)
+  score         Int?
+  attempts      Int         @default(0)
+  completedAt   DateTime?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([nurseryGameId, studentId])
+  @@map("nursery_game_progress")
+}
+
+// ---------------------------------------------------------------------------
+// 15. LIVE CHAT (SRS v1.0: free-form chat during a live class, distinct
+//     from the structured StudentQuestion approve/answer workflow)
+// ---------------------------------------------------------------------------
+
+model LiveChatMessage {
+  id          Int       @id @default(autoincrement())
+  liveClassId Int
+  liveClass   LiveClass @relation(fields: [liveClassId], references: [id], onDelete: Cascade)
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     String
+
+  createdAt DateTime @default(now())
+
+  @@index([liveClassId, createdAt])
+  @@map("live_chat_messages")
+}
+
+
+
+// ---------------------------------------------------------------------------
+// 13. ADMINISTRATION — Audit Logging (SRS v1.0 §19 / §24)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id       Int      @id @default(autoincrement())
+  actorId  Int?
+  actor    User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action   String   // e.g. "user.suspend", "verification.approve"
+  entity   String?  // e.g. "User", "Recording"
+  entityId Int?
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// 16. HIGHER EDUCATION STRUCTURE (SRS v1.0 §18: Department, Programme,
+//     Course, AcademicYear, Semester — extends Faculty/University above)
+// ---------------------------------------------------------------------------
+
+model Department {
+  id           Int         @id @default(autoincrement())
+  facultyId    Int
+  faculty      Faculty     @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  name         String
+  programmes   AcademicProgramme[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([facultyId, name])
+  @@map("departments")
+}
+
+enum AwardLevel {
+  CERTIFICATE
+  DIPLOMA
+  BACHELOR
+  MASTERS
+  PHD
+}
+
+model AcademicProgramme {
+  id           Int        @id @default(autoincrement())
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  name         String
+  awardLevel   AwardLevel
+  durationYears Int       @default(3)
+
+  courses AcademicCourse[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([departmentId, name])
+  @@map("academic_programmes")
+}
+
+model AcademicCourse {
+  id           Int               @id @default(autoincrement())
+  programmeId  Int
+  programme    AcademicProgramme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  semesterId   Int?
+  semester     Semester?         @relation(fields: [semesterId], references: [id])
+  code         String
+  name         String
+  creditHours  Int               @default(3)
+
+  createdAt DateTime @default(now())
+
+  @@unique([programmeId, code])
+  @@map("academic_courses")
+}
+
+model AcademicYear {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique // e.g. "2026/2027"
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean    @default(false)
+
+  semesters Semester[]
+
+  createdAt DateTime @default(now())
+
+  @@map("academic_years")
+}
+
+model Semester {
+  id             Int          @id @default(autoincrement())
+  academicYearId Int
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  name           String       // e.g. "Semester 1"
+  sortOrder      Int          @default(0)
+  isActive       Boolean      @default(false)
+
+  courses AcademicCourse[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([academicYearId, name])
+  @@map("semesters")
+}
+
+// ---------------------------------------------------------------------------
+// 17. ED ADVERTISING (SRS §10.16 — education-focused ads/announcements)
+// ---------------------------------------------------------------------------
+
+enum AdvertisementCategory {
+  GOVERNMENT_ANNOUNCEMENT
+  MINISTRY_ANNOUNCEMENT
+  EXAM_RESULTS
+  EXAM_TIMETABLE
+  SCHOLARSHIP
+  ADMISSION
+  TRAINING_OPPORTUNITY
+  EDUCATION_OPPORTUNITY
+  SCHOOL_ANNOUNCEMENT
+  UNIVERSITY_ANNOUNCEMENT
+}
+
+enum AdvertisementStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model Advertisement {
+  id               Int                   @id @default(autoincrement())
+  advertiserId     Int
+  advertiser       User                  @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  imageUrl         String?
+  category         AdvertisementCategory
+  startDate        DateTime
+  endDate          DateTime
+  targetEducationLevelId Int?
+  targetEducationLevel   EducationLevel?  @relation(fields: [targetEducationLevelId], references: [id])
+  targetRegionId   Int?
+  targetRegion     Region?               @relation(fields: [targetRegionId], references: [id])
+  status           AdvertisementStatus   @default(PENDING_APPROVAL)
+  rejectionReason  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, startDate, endDate])
+  @@map("advertisements")
+}
+
+// ---------------------------------------------------------------------------
+// 18. PLATFORM CONFIGURATION (SRS v1.0 §18: SystemSetting key/value)
+// ---------------------------------------------------------------------------
+
+model SystemSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// ---------------------------------------------------------------------------
+// 19. RESUMABLE INSTITUTION SETUP (SRS v1.0 §18 — InstitutionSetupDraft)
+// ---------------------------------------------------------------------------
+
+enum SetupDraftStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+model InstitutionSetupDraft {
+  id          Int              @id @default(autoincrement())
+  adminId     Int
+  admin       User             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  type        String           // e.g. "school", "university"
+  currentStep Int              @default(1)
+  data        Json             // accumulated wizard form data across steps
+  status      SetupDraftStatus @default(IN_PROGRESS)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("institution_setup_drafts")
+}
