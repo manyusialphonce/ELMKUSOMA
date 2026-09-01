@@ -1,10 +1,13 @@
+
 import { lazy, Suspense } from 'react';
+
 import {
   createBrowserRouter,
   RouterProvider,
 } from 'react-router-dom';
 
 import PublicLayout from '../layouts/PublicLayout';
+import AuthLayout from '../layouts/AuthLayout';
 import StudentLayout from '../layouts/StudentLayout';
 import TeacherLayout from '../layouts/TeacherLayout';
 import AdminLayout from '../layouts/AdminLayout';
@@ -12,11 +15,13 @@ import ParentLayout from '../layouts/ParentLayout';
 import ProtectedRoute from './ProtectedRoute';
 
 
-// ================================
+// =========================================================
 // PUBLIC PAGES
-// ================================
+// =========================================================
 
-const Home = lazy(() => import('../views/public/Home'));
+const Home = lazy(() =>
+  import('../views/public/Home')
+);
 
 const NotesLibrary = lazy(() =>
   import('../views/public/NotesLibrary')
@@ -38,14 +43,20 @@ const SchoolsList = lazy(() =>
   import('../views/public/SchoolsList')
 );
 
+// NEW: SCHOOL CATEGORY PAGE
+const SchoolCategory = lazy(() =>
+  import('../views/public/SchoolCategory')
+);
+
+// SCHOOL DETAIL PAGE
 const SchoolDetail = lazy(() =>
   import('../views/public/SchoolDetail')
 );
 
 
-// ================================
+// =========================================================
 // AUTH PAGES
-// ================================
+// =========================================================
 
 const Login = lazy(() =>
   import('../views/auth/Login')
@@ -55,10 +66,14 @@ const Register = lazy(() =>
   import('../views/auth/Register')
 );
 
+const ForgotPassword = lazy(() =>
+  import('../views/auth/ForgotPassword')
+);
 
-// ================================
+
+// =========================================================
 // STUDENT PAGES
-// ================================
+// =========================================================
 
 const StudentDashboard = lazy(() =>
   import('../views/student/StudentDashboard')
@@ -85,9 +100,9 @@ const NurseryGames = lazy(() =>
 );
 
 
-// ================================
+// =========================================================
 // TEACHER PAGES
-// ================================
+// =========================================================
 
 const TeacherDashboard = lazy(() =>
   import('../views/teacher/TeacherDashboard')
@@ -106,9 +121,9 @@ const TeacherAssignments = lazy(() =>
 );
 
 
-// ================================
+// =========================================================
 // ADMIN PAGES
-// ================================
+// =========================================================
 
 const AdminDashboard = lazy(() =>
   import('../views/admin/AdminDashboard')
@@ -131,37 +146,41 @@ const SchoolSetupWizard = lazy(() =>
 );
 
 
-// ================================
+// =========================================================
 // PARENT PAGES
-// ================================
+// =========================================================
 
 const ParentDashboard = lazy(() =>
   import('../views/parent/ParentDashboard')
 );
 
 
-// ================================
+// =========================================================
 // LOADING FALLBACK
-// ================================
+// =========================================================
 
 function PageFallback() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center py-24">
+
       <div className="text-center">
+
         <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
 
         <p className="text-sm font-medium text-gray-500">
           Loading...
         </p>
+
       </div>
+
     </div>
   );
 }
 
 
-// ================================
+// =========================================================
 // SUSPENSE HELPER
-// ================================
+// =========================================================
 
 const s = (element) => (
   <Suspense fallback={<PageFallback />}>
@@ -170,61 +189,98 @@ const s = (element) => (
 );
 
 
-// ================================
+// =========================================================
 // ROUTER
-// ================================
+// =========================================================
 
 const router = createBrowserRouter([
 
-  // ==================================
+
+  // =======================================================
   // PUBLIC AREA
-  // ==================================
+  // =======================================================
 
   {
     element: <PublicLayout />,
 
     children: [
 
+      // HOME
       {
         path: '/',
         element: s(<Home />),
       },
 
-      {
-        path: '/login',
-        element: s(<Login />),
-      },
 
-      {
-        path: '/register',
-        element: s(<Register />),
-      },
-
-      {
-        path: '/notes-library',
-        element: s(<NotesLibrary />),
-      },
-
+      
+      // CERTIFICATE VERIFICATION
       {
         path: '/certificates/verify',
         element: s(<CertificateVerify />),
       },
 
+
+      // ADVERTISING
       {
         path: '/advertising',
         element: s(<EdAdvertising />),
       },
 
+
+      // SEARCH
       {
         path: '/search',
         element: s(<SearchResults />),
       },
 
+
+      // =================================================
+      // SCHOOLS
+      // =================================================
+
+      // MAIN SCHOOL CATEGORIES PAGE
+      //
+      // /schools
+      //
+      // Shows:
+      // Primary
+      // Secondary
+      // Colleges
+      // Universities
+      // ELMKUSOMA Private
+      //
       {
         path: '/schools',
         element: s(<SchoolsList />),
       },
 
+
+      // =================================================
+      // SCHOOL CATEGORY PAGE
+      // =================================================
+      //
+      // Examples:
+      //
+      // /schools/category/primary
+      // /schools/category/secondary
+      // /schools/category/colleges
+      // /schools/category/universities
+      // /schools/category/elmkusoma-private
+      //
+      {
+        path: '/schools/category/:category',
+        element: s(<SchoolCategory />),
+      },
+
+
+      // =================================================
+      // SCHOOL DETAIL PAGE
+      // =================================================
+      //
+      // Example:
+      //
+      // /schools/bunge-primary-school
+      //
       {
         path: '/schools/:slug',
         element: s(<SchoolDetail />),
@@ -234,9 +290,42 @@ const router = createBrowserRouter([
   },
 
 
-  // ==================================
+  // =======================================================
+  // AUTH AREA
+  // =======================================================
+
+  {
+    element: <AuthLayout />,
+
+    children: [
+
+      // LOGIN
+      {
+        path: '/login',
+        element: s(<Login />),
+      },
+
+
+      // REGISTER
+      {
+        path: '/register',
+        element: s(<Register />),
+      },
+
+
+      // FORGOT PASSWORD
+      {
+        path: '/forgot-password',
+        element: s(<ForgotPassword />),
+      },
+
+    ],
+  },
+
+
+  // =======================================================
   // STUDENT AREA
-  // ==================================
+  // =======================================================
 
   {
     element: (
@@ -253,32 +342,47 @@ const router = createBrowserRouter([
         element: <StudentLayout />,
 
         children: [
+          {
+            path: 'notes-library',
+            element: s(<NotesLibrary />),
+          },
 
+          // STUDENT DASHBOARD
           {
             index: true,
             element: s(<StudentDashboard />),
           },
 
+
+          // LIVE CLASSES
           {
             path: 'live-classes',
             element: s(<StudentLiveClasses />),
           },
 
+
+          // RECORDED LESSONS
           {
             path: 'recorded-lessons',
             element: s(<StudentRecordings />),
           },
 
+
+          // SUBSCRIPTION
           {
             path: 'subscription',
             element: s(<StudentSubscription />),
           },
 
+
+          // CERTIFICATES
           {
             path: 'certificates',
             element: s(<StudentCertificates />),
           },
 
+
+          // NURSERY GAMES
           {
             path: 'nursery-games',
             element: s(<NurseryGames />),
@@ -291,9 +395,9 @@ const router = createBrowserRouter([
   },
 
 
-  // ==================================
+  // =======================================================
   // TEACHER AREA
-  // ==================================
+  // =======================================================
 
   {
     element: (
@@ -311,14 +415,24 @@ const router = createBrowserRouter([
 
         children: [
 
+          // TEACHER DASHBOARD
           {
             index: true,
             element: s(<TeacherDashboard />),
           },
 
+
+          // LIVE CLASSES
           {
             path: 'live-classes',
             element: s(<TeacherLiveClasses />),
+          },
+
+
+          // QUIZZES
+          {
+            path: 'notes-library',
+            element: s(<NotesLibrary />),
           },
 
           {
@@ -326,6 +440,8 @@ const router = createBrowserRouter([
             element: s(<TeacherQuizzes />),
           },
 
+
+          // ASSIGNMENTS
           {
             path: 'assignments',
             element: s(<TeacherAssignments />),
@@ -338,9 +454,9 @@ const router = createBrowserRouter([
   },
 
 
-  // ==================================
+  // =======================================================
   // PARENT AREA
-  // ==================================
+  // =======================================================
 
   {
     element: (
@@ -358,9 +474,14 @@ const router = createBrowserRouter([
 
         children: [
 
+          // PARENT DASHBOARD
           {
             index: true,
             element: s(<ParentDashboard />),
+          },
+          {
+            path: 'notes-library',
+            element: s(<NotesLibrary />),
           },
 
         ],
@@ -370,9 +491,9 @@ const router = createBrowserRouter([
   },
 
 
-  // ==================================
+  // =======================================================
   // ADMIN AREA
-  // ==================================
+  // =======================================================
 
   {
     element: (
@@ -394,26 +515,35 @@ const router = createBrowserRouter([
 
         children: [
 
+          // ADMIN DASHBOARD
           {
             index: true,
             element: s(<AdminDashboard />),
           },
 
+
+          // TEACHER VERIFICATIONS
           {
             path: 'verifications',
             element: s(<AdminTeacherVerifications />),
           },
 
+
+          // AUDIT LOGS
           {
             path: 'audit-logs',
             element: s(<AdminAuditLogs />),
           },
 
+
+          // ADVERTISEMENTS
           {
             path: 'advertising',
             element: s(<AdminAdvertisements />),
           },
 
+
+          // SCHOOL SETUP
           {
             path: 'setup-school',
             element: s(<SchoolSetupWizard />),
@@ -426,15 +556,16 @@ const router = createBrowserRouter([
   },
 
 
-  // ==================================
+  // =======================================================
   // NOT FOUND
-  // ==================================
+  // =======================================================
 
   {
     path: '*',
 
     element: (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+
         <div className="text-center">
 
           <p className="text-6xl font-bold text-blue-600">
@@ -450,6 +581,7 @@ const router = createBrowserRouter([
           </p>
 
         </div>
+
       </div>
     ),
 
@@ -458,12 +590,13 @@ const router = createBrowserRouter([
 ]);
 
 
-// ================================
+// =========================================================
 // APP ROUTER
-// ================================
+// =========================================================
 
 export default function AppRouter() {
   return (
     <RouterProvider router={router} />
   );
 }
+

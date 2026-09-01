@@ -178,6 +178,17 @@ export default function ForgotPassword() {
                 Try another way
               </button>
             </div>
+            <TextField
+              label="Email Address"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
+              placeholder="you@example.com"
+              required
+            />
 
             <Button
               type="submit"
@@ -189,6 +200,7 @@ export default function ForgotPassword() {
                 : activeRecovery === 'phone'
                   ? 'Send OTP'
                   : 'Send Reset Instructions'}
+                : 'Send Reset Instructions'}
             </Button>
           </form>
 
@@ -484,5 +496,8 @@ export default function ForgotPassword() {
 
     </div>
 
+        </div>
+      </div>
+    </div>
   );
 }

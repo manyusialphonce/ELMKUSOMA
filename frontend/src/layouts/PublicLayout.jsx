@@ -229,14 +229,6 @@ export default function PublicLayout() {
             </Link>
 
 
-            <Link
-              to="/notes-library"
-              className="transition hover:text-forest"
-            >
-              Notes Library
-            </Link>
-
-
             <a
               href="/#about"
               className="transition hover:text-forest"
@@ -264,17 +256,18 @@ export default function PublicLayout() {
                 <Link
                   to="/login"
                   className="
-                    hidden
-                    text-sm
+                    rounded-lg
+                    bg-forest
+                    px-4
+                    py-2
                     font-semibold
-                    text-charcoal/80
+                    text-white
                     transition
-                    hover:text-forest
-                    sm:block
-                  "
-                >
-                  Login
-                </Link>
+                    hover:bg-forest/90
+                "
+               >
+                Login
+               </Link>
 
 
                 <Link
@@ -494,26 +487,6 @@ export default function PublicLayout() {
                 </Link>
 
 
-                <Link
-                  to="/notes-library"
-                  onClick={closeMobileMenu}
-                  className="
-                    block
-                    rounded-lg
-                    px-4
-                    py-3
-                    text-sm
-                    font-medium
-                    text-charcoal/80
-                    transition
-                    hover:bg-forest/5
-                    hover:text-forest
-                  "
-                >
-                  Notes Library
-                </Link>
-
-
                 <a
                   href="/#about"
                   onClick={closeMobileMenu}
@@ -554,14 +527,15 @@ export default function PublicLayout() {
                       onClick={closeMobileMenu}
                       className="
                         rounded-lg
-                        border
-                        border-forest/20
+                        bg-forest
                         px-4
-                        py-3
-                        text-center
+                        py-2
                         text-sm
                         font-semibold
-                        text-forest
+                        text-white
+                        transition
+                        hover:bg-forest/90
+
                       "
                     >
                       Login
@@ -573,7 +547,7 @@ export default function PublicLayout() {
                       onClick={closeMobileMenu}
                       className="
                         rounded-lg
-                        bg-marigold
+                        bg-deep-green
                         px-4
                         py-3
                         text-center
@@ -684,7 +658,8 @@ export default function PublicLayout() {
           FOOTER
       ====================================== */}
 
-      <footer className="mt-16 border-t border-forest/15 bg-white">
+      {!user && (
+  <footer className="mt-16 border-t border-forest/15 bg-white">
 
         <div className="mx-auto max-w-7xl px-6 py-12">
 
@@ -764,14 +739,6 @@ export default function PublicLayout() {
                   className="transition hover:text-forest"
                 >
                   Schools
-                </Link>
-
-
-                <Link
-                  to="/notes-library"
-                  className="transition hover:text-forest"
-                >
-                  Notes Library
                 </Link>
 
 
@@ -859,6 +826,7 @@ export default function PublicLayout() {
         </div>
 
       </footer>
+)}
 
 
     </div>

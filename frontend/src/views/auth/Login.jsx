@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 
 import {
@@ -19,10 +20,6 @@ import Alert from '../../components/common/Alert';
 
 function getHomeByRole(user) {
 
-  // Support both:
-  // user.roles = ['student']
-  // user.role = 'student'
-
   const roles = Array.isArray(user?.roles)
     ? user.roles
     : user?.role
@@ -30,14 +27,13 @@ function getHomeByRole(user) {
       : [];
 
 
-  // Normalize roles to lowercase
   const normalizedRoles = roles.map((role) =>
     String(role).toLowerCase()
   );
 
 
   // ======================================
-  // ADMIN ROLES
+  // ADMIN
   // ======================================
 
   if (
@@ -60,9 +56,7 @@ function getHomeByRole(user) {
   // TEACHER
   // ======================================
 
-  if (
-    normalizedRoles.includes('teacher')
-  ) {
+  if (normalizedRoles.includes('teacher')) {
     return '/teacher';
   }
 
@@ -71,9 +65,7 @@ function getHomeByRole(user) {
   // PARENT
   // ======================================
 
-  if (
-    normalizedRoles.includes('parent')
-  ) {
+  if (normalizedRoles.includes('parent')) {
     return '/parent';
   }
 
@@ -82,9 +74,7 @@ function getHomeByRole(user) {
   // STUDENT
   // ======================================
 
-  if (
-    normalizedRoles.includes('student')
-  ) {
+  if (normalizedRoles.includes('student')) {
     return '/dashboard';
   }
 
@@ -130,8 +120,7 @@ export default function Login() {
   const [error, setError] = useState('');
 
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
 
   // ======================================
@@ -162,30 +151,24 @@ export default function Login() {
 
     event.preventDefault();
 
-
-    // Clear previous error
     setError('');
 
-
-    // Start loading
     setLoading(true);
 
 
     try {
 
-      // Login user
       const user = await login(form);
 
 
       // If user was trying to access
-      // a protected page before login,
-      // return them there.
+      // a protected page before login
       const redirectFrom =
         location.state?.from?.pathname;
 
 
-      // Otherwise send them to the
-      // correct dashboard based on role.
+      // Otherwise go to dashboard
+      // based on user role
       const redirectTo =
         redirectFrom ||
         getHomeByRole(user);
@@ -213,7 +196,6 @@ export default function Login() {
 
     } finally {
 
-      // Stop loading
       setLoading(false);
 
     }
@@ -228,79 +210,79 @@ export default function Login() {
   return (
 
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      className="
+        min-h-screen
+        bg-cover
+        bg-center
+        bg-no-repeat
+      "
       style={{
         backgroundImage: `url(${registerBg})`,
       }}
     >
 
+      {/* LOGIN CARD */}
 
-      {/* ==================================
-          LOGIN CARD
-      =================================== */}
       <div className="mx-auto w-full max-w-lg px-4 py-12">
+
         <div
           className="
-          rounded-2xl
-          border
-          border-slate-200
-          bg-white/93
-          p-6
-          shadow-lg
-          sm:p-8
-        "
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white/93
+            p-6
+            shadow-lg
+            sm:p-8
+          "
         >
 
 
-          {/* ================================
-            HEADER
-        ================================= */}
+          {/* ==================================
+              HEADER
+          =================================== */}
 
           <div className="mb-8 text-center">
 
 
-            {/* LOGO PLACEHOLDER */}
+            {/* LOGO */}
 
             <div
               className="
-              mx-auto
-              mb-4
-              flex
-              h-14
-              w-14
-              items-center
-              justify-center
-              rounded-2xl
-              bg-blue-600
-              text-xl
-              font-bold
-              text-white
-              shadow-md
-            "
+                mx-auto
+                mb-4
+                flex
+                h-14
+                w-14
+                items-center
+                justify-center
+                rounded-2xl
+                bg-blue-600
+                text-xl
+                font-bold
+                text-white
+                shadow-md
+              "
             >
               E
             </div>
 
 
             <h1 className="text-2xl font-bold text-slate-900">
-
               Welcome back
-
             </h1>
 
 
             <p className="mt-2 text-sm text-slate-500">
-
               Log in to continue learning with ELMKUSOMA.
-
             </p>
 
           </div>
 
 
-          {/* ================================
-            ERROR MESSAGE
-        ================================= */}
+          {/* ==================================
+              ERROR MESSAGE
+          =================================== */}
 
           {error && (
 
@@ -317,9 +299,9 @@ export default function Login() {
           )}
 
 
-          {/* ================================
-            LOGIN FORM
-        ================================= */}
+          {/* ==================================
+              LOGIN FORM
+          =================================== */}
 
           <form
             onSubmit={handleSubmit}
@@ -342,15 +324,40 @@ export default function Login() {
 
             {/* PASSWORD */}
 
-            <TextField
-              label="Password"
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
+            <div>
+
+              <TextField
+                label="Password"
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
+              />
+
+
+              {/* FORGOT PASSWORD */}
+
+              <div className="mt-2 flex justify-end">
+
+                <Link
+                  to="/forgot-password"
+                  className="
+                    text-sm
+                    font-semibold
+                    text-blue-600
+                    transition
+                    hover:text-blue-800
+                    hover:underline
+                  "
+                >
+                  Forgot password?
+                </Link>
+
+              </div>
+
+            </div>
 
 
             {/* LOGIN BUTTON */}
@@ -368,74 +375,65 @@ export default function Login() {
 
             </Button>
 
-
           </form>
 
 
-          {/* ================================
-            REGISTER LINK
-        ================================= */}
+          {/* ==================================
+              REGISTER LINK
+          =================================== */}
 
           <div className="mt-6 text-center">
-
 
             <p className="text-sm text-slate-600">
 
               Don't have an account?{' '}
 
-
               <Link
                 to="/register"
                 className="
-                font-semibold
-                text-blue-600
-                transition
-                hover:text-blue-700
-              "
+                  font-semibold
+                  text-blue-600
+                  transition
+                  hover:text-blue-700
+                  hover:underline
+                "
               >
-
                 Create an account
-
               </Link>
 
-
             </p>
-
 
           </div>
 
 
-          {/* ================================
-            BACK HOME
-        ================================= */}
+          {/* ==================================
+              BACK HOME
+          =================================== */}
 
           <div className="mt-5 text-center">
-
 
             <Link
               to="/"
               className="
-              text-xs
-              text-slate-500
-              transition
-              hover:text-blue-600
-            "
+                text-xs
+                text-slate-500
+                transition
+                hover:text-blue-600
+              "
             >
-
               ← Back to home
-
             </Link>
-
 
           </div>
 
 
         </div>
 
-
       </div>
+
     </div>
 
   );
 
 }
+
