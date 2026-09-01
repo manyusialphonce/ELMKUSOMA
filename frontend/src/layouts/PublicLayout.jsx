@@ -256,17 +256,18 @@ export default function PublicLayout() {
                 <Link
                   to="/login"
                   className="
-                    hidden
-                    text-sm
+                    rounded-lg
+                    bg-forest
+                    px-4
+                    py-2
                     font-semibold
-                    text-charcoal/80
+                    text-white
                     transition
-                    hover:text-forest
-                    sm:block
-                  "
-                >
-                  Login
-                </Link>
+                    hover:bg-forest/90
+                "
+               >
+                Login
+               </Link>
 
 
                 <Link
@@ -526,14 +527,15 @@ export default function PublicLayout() {
                       onClick={closeMobileMenu}
                       className="
                         rounded-lg
-                        border
-                        border-forest/20
+                        bg-forest
                         px-4
-                        py-3
-                        text-center
+                        py-2
                         text-sm
                         font-semibold
-                        text-forest
+                        text-white
+                        transition
+                        hover:bg-forest/90
+
                       "
                     >
                       Login
@@ -545,7 +547,7 @@ export default function PublicLayout() {
                       onClick={closeMobileMenu}
                       className="
                         rounded-lg
-                        bg-marigold
+                        bg-deep-green
                         px-4
                         py-3
                         text-center
