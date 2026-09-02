@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import {
   Link,
@@ -6,16 +6,18 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
+import HCaptcha from '@hcaptcha/react-hcaptcha';
+
 import useAuthStore from '../../stores/authStore';
 import registerBg from '../../assets/register-bg.jpg';
 import TextField from '../../components/common/TextField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
+
 import {
   TANZANIA_REGIONS,
   getDistrictsByRegion,
 } from '../../data/tanzaniaLocations';
-
 
 
 // ======================================
@@ -54,16 +56,12 @@ function getHomeByRole(user) {
       ? [user.role]
       : [];
 
-
-  // Normalize all roles
   const normalizedRoles = roles.map(
     (role) => String(role).toLowerCase()
   );
 
 
-  // ======================================
   // ADMIN
-  // ======================================
 
   if (
     normalizedRoles.some((role) =>
@@ -81,9 +79,7 @@ function getHomeByRole(user) {
   }
 
 
-  // ======================================
   // TEACHER
-  // ======================================
 
   if (
     normalizedRoles.includes('teacher')
@@ -92,9 +88,7 @@ function getHomeByRole(user) {
   }
 
 
-  // ======================================
   // PARENT
-  // ======================================
 
   if (
     normalizedRoles.includes('parent')
@@ -103,9 +97,7 @@ function getHomeByRole(user) {
   }
 
 
-  // ======================================
   // STUDENT
-  // ======================================
 
   if (
     normalizedRoles.includes('student')
@@ -113,10 +105,6 @@ function getHomeByRole(user) {
     return '/dashboard';
   }
 
-
-  // ======================================
-  // DEFAULT
-  // ======================================
 
   return '/';
 }
@@ -140,8 +128,6 @@ export default function Register() {
 
   // ======================================
   // ROLE FROM URL
-  // Example:
-  // /register?role=teacher
   // ======================================
 
   const requestedRole =
@@ -162,7 +148,8 @@ export default function Register() {
   // ======================================
 
   const [form, setForm] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phoneNumber: '',
     dateOfBirth: '',
@@ -173,6 +160,21 @@ export default function Register() {
     passwordConfirmation: '',
     role: initialRole,
   });
+
+
+  // ======================================
+  // AGREEMENT / CAPTCHA STATE
+  // ======================================
+
+  const [agreedToPolicies, setAgreedToPolicies] =
+    useState(false);
+
+
+  const [captchaToken, setCaptchaToken] =
+    useState(null);
+
+
+  const captchaRef = useRef(null);
 
 
   const [error, setError] =
@@ -188,33 +190,45 @@ export default function Register() {
   // ======================================
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+
+    const { name, value } =
+      event.target;
+
 
     setForm((previous) => {
-      // When country changes, clear region and district
+
+      // Country changed
       if (name === 'country') {
+
         return {
           ...previous,
           country: value,
           region: '',
           district: '',
         };
+
       }
 
-      // When region changes, clear district
+
+      // Region changed
       if (name === 'region') {
+
         return {
           ...previous,
           region: value,
           district: '',
         };
+
       }
+
 
       return {
         ...previous,
         [name]: value,
       };
+
     });
+
   };
 
 
@@ -228,26 +242,82 @@ export default function Register() {
 
     setError('');
 
+
+    // ======================================
+    // TERMS & POLICIES
+    // ======================================
+
+    if (!agreedToPolicies) {
+
+      setError(
+        'You must agree to the Terms of Service, Privacy Policy and Acceptable Use Policy.'
+      );
+
+      return;
+
+    }
+
+
+    // ======================================
+    // CAPTCHA
+    // ======================================
+
+    if (!captchaToken) {
+
+      setError(
+        'Please complete the human verification.'
+      );
+
+      return;
+
+    }
+
+
     // ======================================
     // DATE OF BIRTH VALIDATION
     // ======================================
 
     if (!form.dateOfBirth) {
-      setError('Date of Birth is required.');
+
+      setError(
+        'Date of Birth is required.'
+      );
+
       return;
+
     }
 
-    const dateOfBirth = new Date(form.dateOfBirth);
-    const today = new Date();
 
-    if (Number.isNaN(dateOfBirth.getTime())) {
-      setError('Please enter a valid Date of Birth.');
+    const dateOfBirth =
+      new Date(form.dateOfBirth);
+
+    const today =
+      new Date();
+
+
+    if (
+      Number.isNaN(
+        dateOfBirth.getTime()
+      )
+    ) {
+
+      setError(
+        'Please enter a valid Date of Birth.'
+      );
+
       return;
+
     }
+
 
     if (dateOfBirth > today) {
-      setError('Date of Birth cannot be in the future.');
+
+      setError(
+        'Date of Birth cannot be in the future.'
+      );
+
       return;
+
     }
 
 
@@ -259,38 +329,75 @@ export default function Register() {
       form.role === 'teacher' ||
       form.role === 'parent'
     ) {
-      // Country is required
+
       if (!form.country.trim()) {
-        setError('Country is required.');
+
+        setError(
+          'Country is required.'
+        );
+
         return;
+
       }
 
-      // Tanzania uses dropdowns
+
+      // Tanzania
+
       if (form.country === 'Tanzania') {
+
         if (!form.region) {
-          setError('Please select a region.');
+
+          setError(
+            'Please select a region.'
+          );
+
           return;
+
         }
+
 
         if (!form.district) {
-          setError('Please select a district.');
+
+          setError(
+            'Please select a district.'
+          );
+
           return;
+
         }
+
       }
 
-      // Other countries use text fields
+
+      // Other countries
+
       else {
+
         if (!form.region.trim()) {
-          setError('Region is required.');
+
+          setError(
+            'Region is required.'
+          );
+
           return;
+
         }
+
 
         if (!form.district.trim()) {
-          setError('District is required.');
+
+          setError(
+            'District is required.'
+          );
+
           return;
+
         }
+
       }
+
     }
+
 
     // ======================================
     // PASSWORD VALIDATION
@@ -310,8 +417,9 @@ export default function Register() {
     }
 
 
-    // Optional basic password validation
-    if (form.password.length < 6) {
+    if (
+      form.password.length < 6
+    ) {
 
       setError(
         'Password must be at least 6 characters.'
@@ -328,36 +436,92 @@ export default function Register() {
     try {
 
       // ======================================
+      // CREATE FULL NAME
+      // ======================================
+
+      const fullName = [
+        form.firstName.trim(),
+        form.lastName.trim(),
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+
+      // ======================================
       // CREATE BACKEND PAYLOAD
       // ======================================
 
       const payload = {
-        fullName: form.fullName.trim(),
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-        role: form.role.toLowerCase(),
-        dateOfBirth: form.dateOfBirth,
+
+        // Keep fullName for current backend
+        fullName,
+
+        // Also send separated names
+        firstName:
+          form.firstName.trim(),
+
+        lastName:
+          form.lastName.trim(),
+
+        email:
+          form.email.trim().toLowerCase(),
+
+        password:
+          form.password,
+
+        role:
+          form.role.toLowerCase(),
+
+        dateOfBirth:
+          form.dateOfBirth,
+
+        // hCaptcha token
+        captchaToken,
+
+        // Policy agreement
+        agreedToPolicies,
       };
 
-      // Phone number
-      if (form.phoneNumber.trim()) {
-        payload.phoneNumber = form.phoneNumber.trim();
+
+      // ======================================
+      // PHONE NUMBER
+      // ======================================
+
+      if (
+        form.phoneNumber.trim()
+      ) {
+
+        payload.phoneNumber =
+          form.phoneNumber.trim();
+
       }
-      console.log('REGISTRATION PAYLOAD:', payload);
 
 
-      // Location information
-      // Only Teacher and Parent should send location data.
+      // ======================================
+      // LOCATION
+      // ======================================
+
       if (
         form.role === 'teacher' ||
         form.role === 'parent'
       ) {
-        payload.country = form.country.trim();
-        payload.region = form.region.trim();
-        payload.district = form.district.trim();
+
+        payload.country =
+          form.country.trim();
+
+        payload.region =
+          form.region.trim();
+
+        payload.district =
+          form.district.trim();
+
       }
 
-      console.log('REGISTRATION PAYLOAD:', payload);
+
+      console.log(
+        'REGISTRATION PAYLOAD:',
+        payload
+      );
 
 
       // ======================================
@@ -409,6 +573,14 @@ export default function Register() {
       setError(message);
 
 
+      // Reset captcha after failed registration
+      setCaptchaToken(null);
+
+      if (captchaRef.current) {
+        captchaRef.current.resetCaptcha();
+      }
+
+
     } finally {
 
       setLoading(false);
@@ -425,91 +597,107 @@ export default function Register() {
   return (
 
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      className="
+        min-h-screen
+        bg-cover
+        bg-center
+        bg-no-repeat
+      "
       style={{
-        backgroundImage: `url(${registerBg})`,
+        backgroundImage:
+          `url(${registerBg})`,
       }}
     >
-
-
 
       {/* ==================================
           REGISTER CARD
       =================================== */}
-      <div className="mx-auto w-full max-w-2xl px-4 py-12">
+
+      <div
+        className="
+          mx-auto
+          w-full
+          max-w-2xl
+          px-4
+          py-12
+        "
+      >
 
         <div
           className="
-          rounded-2xl
-          border
-          border-slate-200
-          bg-white/93
-          p-6
-          shadow-lg
-          sm:p-8
-        "
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white/93
+            p-6
+            shadow-lg
+            sm:p-8
+          "
         >
 
 
           {/* ================================
-            HEADER
-        ================================= */}
+              HEADER
+          ================================= */}
 
           <div className="mb-8 text-center">
 
-
-            {/* LOGO PLACEHOLDER */}
-
             <div
               className="
-              mx-auto
-              mb-4
-              flex
-              h-14
-              w-14
-              items-center
-              justify-center
-              rounded-2xl
-              bg-blue-600
-              text-xl
-              font-bold
-              text-white
-              shadow-md
-            "
+                mx-auto
+                mb-4
+                flex
+                h-14
+                w-14
+                items-center
+                justify-center
+                rounded-2xl
+                bg-blue-600
+                text-xl
+                font-bold
+                text-white
+                shadow-md
+              "
             >
               E
             </div>
 
 
-            <h1 className="text-2xl font-bold text-slate-900">
-
+            <h1
+              className="
+                text-2xl
+                font-bold
+                text-slate-900
+              "
+            >
               Create your account
-
             </h1>
 
 
-            <p className="mt-2 text-sm text-slate-500">
-
+            <p
+              className="
+                mt-2
+                text-sm
+                text-slate-500
+              "
+            >
               Join ELMKUSOMA and start your
               digital learning journey.
-
             </p>
 
           </div>
 
 
           {/* ================================
-            ERROR
-        ================================= */}
+              ERROR
+          ================================= */}
 
           {error && (
 
             <div className="mb-5">
 
               <Alert type="error">
-
                 {error}
-
               </Alert>
 
             </div>
@@ -518,8 +706,8 @@ export default function Register() {
 
 
           {/* ================================
-            FORM
-        ================================= */}
+              FORM
+          ================================= */}
 
           <form
             onSubmit={handleSubmit}
@@ -531,10 +719,16 @@ export default function Register() {
 
             <label className="block">
 
-              <span className="mb-1 block text-sm font-medium text-slate-700">
-
+              <span
+                className="
+                  mb-1
+                  block
+                  text-sm
+                  font-medium
+                  text-slate-700
+                "
+              >
                 I am registering as
-
               </span>
 
 
@@ -543,20 +737,20 @@ export default function Register() {
                 value={form.role}
                 onChange={handleChange}
                 className="
-                w-full
-                rounded-xl
-                border
-                border-slate-300
-                bg-white
-                px-3
-                py-2.5
-                text-sm
-                outline-none
-                transition
-                focus:border-blue-500
-                focus:ring-2
-                focus:ring-blue-100
-              "
+                  w-full
+                  rounded-xl
+                  border
+                  border-slate-300
+                  bg-white
+                  px-3
+                  py-2.5
+                  text-sm
+                  outline-none
+                  transition
+                  focus:border-blue-500
+                  focus:ring-2
+                  focus:ring-blue-100
+                "
               >
 
                 {ROLES.map((role) => (
@@ -565,9 +759,7 @@ export default function Register() {
                     key={role.value}
                     value={role.value}
                   >
-
                     {role.label}
-
                   </option>
 
                 ))}
@@ -577,16 +769,39 @@ export default function Register() {
             </label>
 
 
-            {/* FULL NAME */}
+            {/* =================================
+                FIRST NAME + LAST NAME
+            ================================== */}
 
-            <TextField
-              label="Full name"
-              name="fullName"
-              value={form.fullName}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              required
-            />
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-4
+                sm:grid-cols-2
+              "
+            >
+
+              <TextField
+                label="First Name"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                placeholder="Enter your first name"
+                required
+              />
+
+
+              <TextField
+                label="Last Name"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                placeholder="Enter your last name"
+                required
+              />
+
+            </div>
 
 
             {/* EMAIL */}
@@ -614,8 +829,6 @@ export default function Register() {
             />
 
 
-            {/* TEACHER INFORMATION */}
-
             {/* DATE OF BIRTH */}
 
             <TextField
@@ -627,171 +840,255 @@ export default function Register() {
               required
             />
 
-            {/* TEACHER / PARENT LOCATION */}
 
-            {(form.role === 'teacher' || form.role === 'parent') && (
-              <>
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-slate-700">
-                    Country
-                  </span>
+            {/* =================================
+                TEACHER / PARENT LOCATION
+            ================================== */}
 
-                  <select
-                    name="country"
-                    value={form.country}
-                    onChange={handleChange}
-                    required
-                    className="
-      w-full
-      rounded-xl
-      border
-      border-slate-300
-      bg-white
-      px-3
-      py-2.5
-      text-sm
-      outline-none
-      transition
-      focus:border-blue-500
-      focus:ring-2
-      focus:ring-blue-100
-    "
-                  >
-                    <option value="">Select country</option>
+            {(
+              form.role === 'teacher' ||
+              form.role === 'parent'
+            ) && (
 
-                    <option value="Tanzania">
-                      Tanzania
-                    </option>
+                <>
 
-                    <option value="Kenya">
-                      Kenya
-                    </option>
+                  {/* COUNTRY */}
 
-                    <option value="Uganda">
-                      Uganda
-                    </option>
-
-                    <option value="Rwanda">
-                      Rwanda
-                    </option>
-
-                    <option value="Burundi">
-                      Burundi
-                    </option>
-
-                    <option value="Other">
-                      Other
-                    </option>
-                  </select>
-                </label>
-
-                {form.country === 'Tanzania' ? (
                   <label className="block">
-                    <span className="mb-1 block text-sm font-medium text-slate-700">
-                      Region
+
+                    <span
+                      className="
+                      mb-1
+                      block
+                      text-sm
+                      font-medium
+                      text-slate-700
+                    "
+                    >
+                      Country
                     </span>
 
+
                     <select
+                      name="country"
+                      value={form.country}
+                      onChange={handleChange}
+                      required
+                      className="
+                      w-full
+                      rounded-xl
+                      border
+                      border-slate-300
+                      bg-white
+                      px-3
+                      py-2.5
+                      text-sm
+                      outline-none
+                      transition
+                      focus:border-blue-500
+                      focus:ring-2
+                      focus:ring-blue-100
+                    "
+                    >
+
+                      <option value="">
+                        Select country
+                      </option>
+
+                      <option value="Tanzania">
+                        Tanzania
+                      </option>
+
+                      <option value="Kenya">
+                        Kenya
+                      </option>
+
+                      <option value="Uganda">
+                        Uganda
+                      </option>
+
+                      <option value="Rwanda">
+                        Rwanda
+                      </option>
+
+                      <option value="Burundi">
+                        Burundi
+                      </option>
+
+                      <option value="Other">
+                        Other
+                      </option>
+
+                    </select>
+
+                  </label>
+
+
+                  {/* REGION */}
+
+                  {form.country === 'Tanzania' ? (
+
+                    <label className="block">
+
+                      <span
+                        className="
+                        mb-1
+                        block
+                        text-sm
+                        font-medium
+                        text-slate-700
+                      "
+                      >
+                        Region
+                      </span>
+
+
+                      <select
+                        name="region"
+                        value={form.region}
+                        onChange={handleChange}
+                        required
+                        className="
+                        w-full
+                        rounded-xl
+                        border
+                        border-slate-300
+                        bg-white
+                        px-3
+                        py-2.5
+                        text-sm
+                        outline-none
+                        transition
+                        focus:border-blue-500
+                        focus:ring-2
+                        focus:ring-blue-100
+                      "
+                      >
+
+                        <option value="">
+                          Select region
+                        </option>
+
+
+                        {TANZANIA_REGIONS.map(
+                          (region) => (
+
+                            <option
+                              key={region}
+                              value={region}
+                            >
+                              {region}
+                            </option>
+
+                          )
+                        )}
+
+                      </select>
+
+                    </label>
+
+                  ) : (
+
+                    <TextField
+                      label="Region"
                       name="region"
                       value={form.region}
                       onChange={handleChange}
+                      placeholder="Enter your region"
                       required
-                      className="
-        w-full
-        rounded-xl
-        border
-        border-slate-300
-        bg-white
-        px-3
-        py-2.5
-        text-sm
-        outline-none
-        transition
-        focus:border-blue-500
-        focus:ring-2
-        focus:ring-blue-100
-      "
-                    >
-                      <option value="">Select region</option>
+                    />
 
-                      {TANZANIA_REGIONS.map((region) => (
-                        <option key={region} value={region}>
-                          {region}
+                  )}
+
+
+                  {/* DISTRICT */}
+
+                  {form.country === 'Tanzania' ? (
+
+                    <label className="block">
+
+                      <span
+                        className="
+                        mb-1
+                        block
+                        text-sm
+                        font-medium
+                        text-slate-700
+                      "
+                      >
+                        District
+                      </span>
+
+
+                      <select
+                        name="district"
+                        value={form.district}
+                        onChange={handleChange}
+                        required
+                        disabled={!form.region}
+                        className="
+                        w-full
+                        rounded-xl
+                        border
+                        border-slate-300
+                        bg-white
+                        px-3
+                        py-2.5
+                        text-sm
+                        outline-none
+                        transition
+                        focus:border-blue-500
+                        focus:ring-2
+                        focus:ring-blue-100
+                        disabled:cursor-not-allowed
+                        disabled:bg-slate-100
+                      "
+                      >
+
+                        <option value="">
+
+                          {form.region
+                            ? 'Select district'
+                            : 'Select region first'}
+
                         </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <TextField
-                    label="Region"
-                    name="region"
-                    value={form.region}
-                    onChange={handleChange}
-                    placeholder="Enter your region"
-                    required
-                  />
-                )}
 
-                {form.country === 'Tanzania' ? (
-                  <label className="block">
-                    <span className="mb-1 block text-sm font-medium text-slate-700">
-                      District
-                    </span>
 
-                    <select
+                        {getDistrictsByRegion(
+                          form.region
+                        ).map(
+                          (district) => (
+
+                            <option
+                              key={district}
+                              value={district}
+                            >
+                              {district}
+                            </option>
+
+                          )
+                        )}
+
+                      </select>
+
+                    </label>
+
+                  ) : (
+
+                    <TextField
+                      label="District"
                       name="district"
                       value={form.district}
                       onChange={handleChange}
+                      placeholder="Enter your district"
                       required
-                      disabled={!form.region}
-                      className="
-        w-full
-        rounded-xl
-        border
-        border-slate-300
-        bg-white
-        px-3
-        py-2.5
-        text-sm
-        outline-none
-        transition
-        focus:border-blue-500
-        focus:ring-2
-        focus:ring-blue-100
-        disabled:cursor-not-allowed
-        disabled:bg-slate-100
-      "
-                    >
-                      <option value="">
-                        {form.region
-                          ? 'Select district'
-                          : 'Select region first'}
-                      </option>
+                    />
 
-                      {getDistrictsByRegion(form.region).map(
-                        (district) => (
-                          <option
-                            key={district}
-                            value={district}
-                          >
-                            {district}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </label>
-                ) : (
-                  <TextField
-                    label="District"
-                    name="district"
-                    value={form.district}
-                    onChange={handleChange}
-                    placeholder="Enter your district"
-                    required
-                  />
-                )}
-              </>
-            )}
+                  )}
+
+                </>
+
+              )}
 
 
             {/* PASSWORD */}
@@ -820,7 +1117,135 @@ export default function Register() {
             />
 
 
-            {/* SUBMIT */}
+            {/* =================================
+                TERMS & POLICIES
+            ================================== */}
+
+            <div className="pt-2">
+
+              <label
+                className="
+                  flex
+                  cursor-pointer
+                  items-start
+                  gap-2
+                  text-sm
+                  text-slate-600
+                "
+              >
+
+                <input
+                  type="checkbox"
+                  checked={agreedToPolicies}
+                  onChange={(event) =>
+                    setAgreedToPolicies(
+                      event.target.checked
+                    )
+                  }
+                  className="
+                    mt-0.5
+                    h-4
+                    w-4
+                    shrink-0
+                    cursor-pointer
+                    rounded
+                    border-slate-300
+                    text-blue-600
+                    focus:ring-blue-500
+                  "
+                />
+
+
+                <span>
+
+                  I agree to the{' '}
+
+                  <Link
+                    to="/terms"
+                    target="_blank"
+                    className="
+                      font-medium
+                      text-blue-600
+                      underline
+                      hover:text-blue-700
+                    "
+                  >
+                    Terms of Service
+                  </Link>
+
+                  ,{' '}
+
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    className="
+                      font-medium
+                      text-blue-600
+                      underline
+                      hover:text-blue-700
+                    "
+                  >
+                    Privacy Policy
+                  </Link>
+
+                  {' '}and{' '}
+
+                  <Link
+                    to="/acceptable-use"
+                    target="_blank"
+                    className="
+                      font-medium
+                      text-blue-600
+                      underline
+                      hover:text-blue-700
+                    "
+                  >
+                    Acceptable Use Policy
+                  </Link>
+
+                  .
+
+                </span>
+
+              </label>
+
+
+            </div>
+
+
+            {/* =================================
+                hCAPTCHA
+            ================================== */}
+
+            <div className="pt-2">
+
+              <HCaptcha
+                ref={captchaRef}
+                sitekey={
+                  import.meta.env
+                    .VITE_HCAPTCHA_SITE_KEY
+                }
+                onVerify={(token) => {
+                  setCaptchaToken(token);
+                  setError('');
+                }}
+                onExpire={() => {
+                  setCaptchaToken(null);
+                }}
+                onError={() => {
+                  setCaptchaToken(null);
+                  setError(
+                    'Human verification failed. Please try again.'
+                  );
+                }}
+              />
+
+            </div>
+
+
+            {/* =================================
+                SUBMIT
+            ================================== */}
 
             <Button
               type="submit"
@@ -835,18 +1260,21 @@ export default function Register() {
 
             </Button>
 
-
           </form>
 
 
           {/* ================================
-            LOGIN LINK
-        ================================= */}
+              LOGIN LINK
+          ================================= */}
 
           <div className="mt-6 text-center">
 
-
-            <p className="text-sm text-slate-600">
+            <p
+              className="
+                text-sm
+                text-slate-600
+              "
+            >
 
               Already have an account?{' '}
 
@@ -854,20 +1282,16 @@ export default function Register() {
               <Link
                 to="/login"
                 className="
-                font-semibold
-                text-blue-600
-                transition
-                hover:text-blue-700
-              "
+                  font-semibold
+                  text-blue-600
+                  transition
+                  hover:text-blue-700
+                "
               >
-
                 Log in
-
               </Link>
 
-
             </p>
-
 
           </div>
 
@@ -879,22 +1303,18 @@ export default function Register() {
             <Link
               to="/"
               className="
-              text-xs
-              text-slate-500
-              transition
-              hover:text-blue-600
-            "
+                text-xs
+                text-slate-500
+                transition
+                hover:text-blue-600
+              "
             >
-
               ← Back to home
-
             </Link>
 
           </div>
 
-
         </div>
-
 
       </div>
 
