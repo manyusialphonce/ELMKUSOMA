@@ -14,4 +14,6 @@ export const adminApi = {
   listUsers: (params) => client.get('/admin/users', { params }),
   suspendUser: (id) => client.patch(`/admin/users/${id}/suspend`),
   reactivateUser: (id) => client.patch(`/admin/users/${id}/reactivate`),
+  listSettings: () => client.get('/admin/settings'),
+  updateSetting: (key, value) => client.put(`/admin/settings/${key}`, { value }),
 };
