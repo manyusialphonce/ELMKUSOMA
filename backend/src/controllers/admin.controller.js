@@ -118,7 +118,97 @@ const listAuditLogs = asyncHandler(async (req, res) => {
   res.json({ data: logs });
 });
 
+// GET /api/v1/admin/live-classes?status=
+const listAllLiveClasses = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+
+  const liveClasses = await prisma.liveClass.findMany({
+    where: { status: status || undefined },
+    include: {
+      teacher: { select: { id: true, fullName: true } },
+      subject: true,
+      educationLevel: true,
+      _count: { select: { attendances: true } },
+    },
+    orderBy: { startTime: 'desc' },
+    take: 200,
+  });
+
+  res.json({ data: liveClasses });
+});
+
+// GET /api/v1/admin/recordings?status=  (includes drafts, unlike the public listing)
+const listAllRecordings = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+
+  const recordings = await prisma.recording.findMany({
+    where: { status: status || undefined },
+    include: {
+      uploadedBy: { select: { id: true, fullName: true } },
+      subject: true,
+      educationLevel: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+
+  res.json({ data: recordings.map(({ storageKey, ...r }) => r) });
+});
+
+// GET /api/v1/admin/resources?status=  (includes drafts)
+const listAllResources = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+
+  const resources = await prisma.resource.findMany({
+    where: { status: status || undefined },
+    include: {
+      uploadedBy: { select: { id: true, fullName: true } },
+      subject: true,
+      educationLevel: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+
+  res.json({ data: resources.map(({ storageKey, ...r }) => r) });
+});
+
+// GET /api/v1/admin/subscriptions?status=
+const listAllSubscriptions = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+
+  const subscriptions = await prisma.subscription.findMany({
+    where: { status: status || undefined },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+      plan: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+
+  res.json({ data: subscriptions });
+});
+
+// GET /api/v1/admin/payments?status=
+const listAllPayments = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+
+  const payments = await prisma.payment.findMany({
+    where: { status: status || undefined },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+
+  res.json({ data: payments });
+});
+
 module.exports = {
   listVerifications, approveVerification, rejectVerification,
   listUsers, suspendUser, reactivateUser, listAuditLogs,
+  listAllLiveClasses, listAllRecordings, listAllResources,
+  listAllSubscriptions, listAllPayments,
 };

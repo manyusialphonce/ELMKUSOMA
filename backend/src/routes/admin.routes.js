@@ -21,4 +21,10 @@ router.get('/audit-logs', adminController.listAuditLogs);
 router.get('/settings', settingsController.listSettings);
 router.put('/settings/:key', authorize('SUPER_ADMINISTRATOR'), settingsController.upsertSetting);
 
+router.get('/live-classes', adminController.listAllLiveClasses);
+router.get('/recordings', adminController.listAllRecordings);
+router.get('/resources', adminController.listAllResources);
+router.get('/subscriptions', adminController.listAllSubscriptions);
+router.get('/payments', adminController.listAllPayments);
+
 module.exports = router;

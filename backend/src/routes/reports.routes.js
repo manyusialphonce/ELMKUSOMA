@@ -5,6 +5,7 @@ const reportsController = require('../controllers/reports.controller');
 
 router.get('/student/me', authenticate, authorize('STUDENT'), reportsController.studentReport);
 router.get('/teacher/me', authenticate, authorize('TEACHER'), reportsController.teacherReport);
+router.get('/teacher/students', authenticate, authorize('TEACHER'), reportsController.teacherStudents);
 
 router.get(
   '/admin/overview',

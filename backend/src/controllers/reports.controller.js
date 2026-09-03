@@ -124,4 +124,34 @@ const geographyReport = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { studentReport, teacherReport, adminOverview, geographyReport };
+// GET /api/v1/reports/teacher/students  (unique students who've interacted with this teacher's content)
+const teacherStudents = asyncHandler(async (req, res) => {
+  const teacherId = req.user.id;
+
+  const [attendees, quizStudents, submitters] = await Promise.all([
+    prisma.attendance.findMany({
+      where: { liveClass: { teacherId } },
+      select: { student: { select: { id: true, fullName: true, email: true } } },
+      distinct: ['studentId'],
+    }),
+    prisma.quizAttempt.findMany({
+      where: { quiz: { teacherId } },
+      select: { student: { select: { id: true, fullName: true, email: true } } },
+      distinct: ['studentId'],
+    }),
+    prisma.assignmentSubmission.findMany({
+      where: { assignment: { teacherId } },
+      select: { student: { select: { id: true, fullName: true, email: true } } },
+      distinct: ['studentId'],
+    }),
+  ]);
+
+  const byId = new Map();
+  [...attendees, ...quizStudents, ...submitters].forEach(({ student }) => {
+    byId.set(student.id, student);
+  });
+
+  res.json({ data: Array.from(byId.values()) });
+});
+
+module.exports = { studentReport, teacherReport, adminOverview, geographyReport, teacherStudents };
