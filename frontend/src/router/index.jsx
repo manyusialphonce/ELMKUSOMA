@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from 'react';
 import {
   createBrowserRouter,
@@ -41,19 +40,13 @@ const SchoolsList = lazy(() =>
   import('../views/public/SchoolsList')
 );
 
-// SCHOOL CATEGORY PAGE
 const SchoolCategory = lazy(() =>
   import('../views/public/SchoolCategory')
 );
 
-// SCHOOL DETAIL PAGE
 const SchoolDetail = lazy(() =>
   import('../views/public/SchoolDetail')
 );
-
-// =========================================================
-// SCHOOL DIRECTORY PAGES
-// =========================================================
 
 const PrimarySchools = lazy(() =>
   import('../views/public/PrimarySchools')
@@ -105,6 +98,26 @@ const StudentCertificates = lazy(() =>
 
 const NurseryGames = lazy(() =>
   import('../views/student/NurseryGames')
+);
+
+const StudentQuizzes = lazy(() =>
+  import('../views/student/StudentQuizzes')
+);
+
+const StudentAssignments = lazy(() =>
+  import('../views/student/StudentAssignments')
+);
+
+const StudentResults = lazy(() =>
+  import('../views/student/StudentResults')
+);
+
+const StudentNotifications = lazy(() =>
+  import('../views/student/StudentNotifications')
+);
+
+const StudentProfile = lazy(() =>
+  import('../views/student/StudentProfile')
 );
 
 // =========================================================
@@ -204,25 +217,21 @@ const router = createBrowserRouter([
 
     children: [
 
-      // HOME
       {
         path: '/',
         element: page(<Home />),
       },
 
-      // CERTIFICATE VERIFICATION
       {
         path: '/certificates/verify',
         element: page(<CertificateVerify />),
       },
 
-      // ADVERTISING
       {
         path: '/advertising',
         element: page(<EdAdvertising />),
       },
 
-      // SEARCH
       {
         path: '/search',
         element: page(<SearchResults />),
@@ -232,31 +241,26 @@ const router = createBrowserRouter([
       // SCHOOLS
       // =================================================
 
-      // MAIN SCHOOL CATEGORIES PAGE
       {
         path: '/schools',
         element: page(<SchoolsList />),
       },
 
-      // SCHOOL CATEGORY PAGE
       {
         path: '/schools/category/:category',
         element: page(<SchoolCategory />),
       },
 
-      // PRIMARY SCHOOLS LIST
       {
         path: '/schools/primary',
         element: page(<PrimarySchools />),
       },
 
-      // INDIVIDUAL PRIMARY SCHOOL
       {
         path: '/schools/primary/:slug',
         element: page(<PrimarySchoolDetails />),
       },
 
-      // GENERIC SCHOOL DETAILS
       {
         path: '/schools/:slug',
         element: page(<SchoolDetail />),
@@ -274,19 +278,16 @@ const router = createBrowserRouter([
 
     children: [
 
-      // LOGIN
       {
         path: '/login',
         element: page(<Login />),
       },
 
-      // REGISTER
       {
         path: '/register',
         element: page(<Register />),
       },
 
-      // FORGOT PASSWORD
       {
         path: '/forgot-password',
         element: page(<ForgotPassword />),
@@ -311,12 +312,6 @@ const router = createBrowserRouter([
 
         children: [
 
-          // NOTES LIBRARY
-          {
-            path: 'notes-library',
-            element: page(<NotesLibrary />),
-          },
-
           // STUDENT DASHBOARD
           {
             index: true,
@@ -335,6 +330,36 @@ const router = createBrowserRouter([
             element: page(<StudentRecordings />),
           },
 
+          // NOTES LIBRARY
+          {
+            path: 'notes-library',
+            element: page(<NotesLibrary />),
+          },
+
+          // NURSERY GAMES
+          {
+            path: 'nursery-games',
+            element: page(<NurseryGames />),
+          },
+
+          // MY QUIZZES
+          {
+            path: 'quizzes',
+            element: page(<StudentQuizzes />),
+          },
+
+          // MY ASSIGNMENTS
+          {
+            path: 'assignments',
+            element: page(<StudentAssignments />),
+          },
+
+          // MY RESULTS
+          {
+            path: 'results',
+            element: page(<StudentResults />),
+          },
+
           // SUBSCRIPTION
           {
             path: 'subscription',
@@ -347,10 +372,16 @@ const router = createBrowserRouter([
             element: page(<StudentCertificates />),
           },
 
-          // NURSERY GAMES
+          // NOTIFICATIONS
           {
-            path: 'nursery-games',
-            element: page(<NurseryGames />),
+            path: 'notifications',
+            element: page(<StudentNotifications />),
+          },
+
+          // PROFILE
+          {
+            path: 'profile',
+            element: page(<StudentProfile />),
           },
 
         ],
@@ -374,31 +405,26 @@ const router = createBrowserRouter([
 
         children: [
 
-          // TEACHER DASHBOARD
           {
             index: true,
             element: page(<TeacherDashboard />),
           },
 
-          // LIVE CLASSES
           {
             path: 'live-classes',
             element: page(<TeacherLiveClasses />),
           },
 
-          // NOTES LIBRARY
           {
             path: 'notes-library',
             element: page(<NotesLibrary />),
           },
 
-          // QUIZZES
           {
             path: 'quizzes',
             element: page(<TeacherQuizzes />),
           },
 
-          // ASSIGNMENTS
           {
             path: 'assignments',
             element: page(<TeacherAssignments />),
@@ -425,13 +451,11 @@ const router = createBrowserRouter([
 
         children: [
 
-          // PARENT DASHBOARD
           {
             index: true,
             element: page(<ParentDashboard />),
           },
 
-          // NOTES LIBRARY
           {
             path: 'notes-library',
             element: page(<NotesLibrary />),
@@ -464,13 +488,11 @@ const router = createBrowserRouter([
 
         children: [
 
-          // ADMIN DASHBOARD
           {
             index: true,
             element: page(<AdminDashboard />),
           },
 
-          // TEACHER VERIFICATIONS
           {
             path: 'verifications',
             element: page(
@@ -478,19 +500,16 @@ const router = createBrowserRouter([
             ),
           },
 
-          // AUDIT LOGS
           {
             path: 'audit-logs',
             element: page(<AdminAuditLogs />),
           },
 
-          // ADVERTISEMENTS
           {
             path: 'advertising',
             element: page(<AdminAdvertisements />),
           },
 
-          // SCHOOL SETUP
           {
             path: 'setup-school',
             element: page(<SchoolSetupWizard />),
@@ -540,4 +559,3 @@ export default function AppRouter() {
     <RouterProvider router={router} />
   );
 }
-

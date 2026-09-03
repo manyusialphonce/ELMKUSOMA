@@ -16,4 +16,9 @@ export const adminApi = {
   reactivateUser: (id) => client.patch(`/admin/users/${id}/reactivate`),
   listSettings: () => client.get('/admin/settings'),
   updateSetting: (key, value) => client.put(`/admin/settings/${key}`, { value }),
+  listLiveClasses: (params) => client.get('/admin/live-classes', { params }),
+  listRecordings: (params) => client.get('/admin/recordings', { params }),
+  listResources: (params) => client.get('/admin/resources', { params }),
+  listSubscriptions: (params) => client.get('/admin/subscriptions', { params }),
+  listPayments: (params) => client.get('/admin/payments', { params }),
 };
